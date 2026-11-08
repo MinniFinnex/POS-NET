@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<configuration>
+  <connectionStrings>
+    <!-- Configuración para SQL Server LocalDB -->
+    <add name="PuntoDeVentaDB"
+         connectionString="Server=(localdb)\MSSQLLocalDB;Database=PuntoDeVentaDB;Trusted_Connection=True;TrustServerCertificate=True;"
+         providerName="Microsoft.Data.SqlClient" />
+
+    <!-- Alternativa: SQL Server Express con Autenticación Windows -->
+    <!-- <add name="PuntoDeVentaDB" connectionString="Server=localhost\SQLEXPRESS;Database=PuntoDeVentaDB;Trusted_Connection=True;TrustServerCertificate=True;" providerName="Microsoft.Data.SqlClient" /> -->
+
+    <!-- Alternativa: SQL Server con usuario SA -->
+    <!-- <add name="PuntoDeVentaDB" connectionString="Server=localhost;Database=PuntoDeVentaDB;User Id=sa;Password=TU_PASSWORD;TrustServerCertificate=True;" providerName="Microsoft.Data.SqlClient" /> -->
+  </connectionStrings>
+</configuration>
