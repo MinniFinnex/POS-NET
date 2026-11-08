@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Windows.Forms;
 using PuntoDeVenta.Presentacion;
 
@@ -9,8 +10,16 @@ namespace PuntoDeVenta
         [STAThread]
         static void Main()
         {
-            ApplicationConfiguration.Initialize();
-            Application.Run(new frmLogin());
+            try
+            {
+                ApplicationConfiguration.Initialize();
+                Application.Run(new frmLogin());
+            }
+            catch (Exception ex)
+            {
+                File.WriteAllText("crash.log", ex.ToString());
+                MessageBox.Show(ex.ToString(), "Error Fatal", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
     }
 }
