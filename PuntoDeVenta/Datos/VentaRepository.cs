@@ -15,7 +15,7 @@ namespace PuntoDeVenta.Datos
 
             try
             {
-                // 1. Insertar cabecera de la venta
+         
                 var cmdVenta = new SqlCommand(
                     @"INSERT INTO Ventas (Fecha, IdCliente, IdUsuario, Subtotal, Impuesto, Total, Estado)
                       VALUES (@Fecha, @IdCliente, @IdUsuario, @Subtotal, @Impuesto, @Total, @Estado);
@@ -31,7 +31,7 @@ namespace PuntoDeVenta.Datos
 
                 int idVenta = Convert.ToInt32(cmdVenta.ExecuteScalar());
 
-                // 2. Insertar detalle y descontar stock
+          
                 foreach (var d in detalles)
                 {
                     var cmdDet = new SqlCommand(

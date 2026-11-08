@@ -67,7 +67,7 @@ namespace PuntoDeVenta.Presentacion
             // Panel Agregar Producto
             var grpBuscar = new GroupBox
             {
-                Text = "Agregar Producto al Carrito (o escanear código de barras)",
+                Text = "Agregar Producto al Carrito",
                 Location = new Point(20, 85),
                 Size = new Size(720, 90),
                 Font = new Font("Segoe UI", 9f, FontStyle.Bold)
@@ -80,7 +80,7 @@ namespace PuntoDeVenta.Presentacion
             var lblProd = new Label { Text = "Producto:", Location = new Point(135, 25), AutoSize = true, Font = new Font("Segoe UI", 8.5f) };
             txtProductoNombre = new TextBox { Location = new Point(135, 45), Size = new Size(210, 24), ReadOnly = true, Font = new Font("Segoe UI", 9) };
 
-            var lblPre = new Label { Text = "Precio Unit.:", Location = new Point(355, 25), AutoSize = true, Font = new Font("Segoe UI", 8.5f) };
+            var lblPre = new Label { Text = "Precio Uni:", Location = new Point(355, 25), AutoSize = true, Font = new Font("Segoe UI", 8.5f) };
             txtPrecio = new TextBox { Location = new Point(355, 45), Size = new Size(80, 24), ReadOnly = true, Font = new Font("Segoe UI", 9) };
 
             var lblCant = new Label { Text = "Cantidad:", Location = new Point(445, 25), AutoSize = true, Font = new Font("Segoe UI", 8.5f) };
@@ -398,24 +398,7 @@ namespace PuntoDeVenta.Presentacion
             }
             else
             {
-                // Fallback amigable si la BD no está levantada
-                var resp = MessageBox.Show(
-                    $"{res.Mensaje}\n\n¿Deseas simular la venta en MODO OFFLINE para imprimir ticket de prueba?",
-                    "Aviso de Base de Datos",
-                    MessageBoxButtons.YesNo,
-                    MessageBoxIcon.Question);
-
-                if (resp == DialogResult.Yes)
-                {
-                    MessageBox.Show(
-                        $"[TICKET DE VENTA SIMULADA]\n========================\nFolio: #DEMO-{DateTime.Now.Ticks % 10000}\nFecha: {DateTime.Now:g}\nCajero: {_usuario.NombreCompleto}\nItems: {_carrito.Count}\nTotal: {total:C2}\n========================\n¡Gracias por su compra!",
-                        "Ticket de Venta",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Information);
-
-                    _carrito.Clear();
-                    ActualizarTablaCarrito();
-                }
+                
             }
         }
     }

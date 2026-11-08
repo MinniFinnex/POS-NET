@@ -8,6 +8,7 @@ namespace PuntoDeVenta.Presentacion
 {
     public class frmProductos : Form
     {
+        private readonly Usuario? _usuario;
         private DataGridView dgvProductos = null!;
         private TextBox txtCodigo = null!;
         private TextBox txtNombre = null!;
@@ -21,11 +22,32 @@ namespace PuntoDeVenta.Presentacion
 
         private readonly ProductoService _service = new();
 
-        public frmProductos()
+        public frmProductos(Usuario? usuario = null)
         {
+            _usuario = usuario;
             InicializarComponentes();
+            AplicarPermisosPorRol();
             CargarCategorias();
             CargarProductos();
+        }
+
+        private void AplicarPermisosPorRol()
+        {
+            // Si el rol es Cajero (IdRol == 2), el módulo de productos opera en modo consulta
+            if (_usuario != null && _usuario.IdRol == 2)
+            {
+                btnGuardar.Enabled = false;
+                btnEliminar.Enabled = false;
+                btnNuevo.Enabled = false;
+                txtCodigo.ReadOnly = true;
+                txtNombre.ReadOnly = true;
+                txtPrecioVenta.ReadOnly = true;
+                txtStock.ReadOnly = true;
+                cboCategoria.Enabled = false;
+
+                btnGuardar.Text = "🔒 Solo Admin";
+                btnEliminar.Text = "🔒 Solo Admin";
+            }
         }
 
         private void InicializarComponentes()
@@ -36,7 +58,9 @@ namespace PuntoDeVenta.Presentacion
 
             var lblTitulo = new Label
             {
-                Text = "📦 Catálogo de Productos e Inventario",
+                Text = _usuario?.IdRol == 2 
+                    ? "📦 Consulta de Catálogo e Inventario (Modo Cajero)" 
+                    : "📦 Gestión de Productos e Inventario (Administrador)",
                 Font = new Font("Segoe UI", 14, FontStyle.Bold),
                 Location = new Point(20, 15),
                 AutoSize = true
@@ -176,7 +200,6 @@ namespace PuntoDeVenta.Presentacion
             }
             catch
             {
-                // Modo sin base de datos activa
                 dgvProductos.Columns.Clear();
                 dgvProductos.Columns.Add("Codigo", "Código");
                 dgvProductos.Columns.Add("Nombre", "Nombre");
@@ -215,6 +238,12 @@ namespace PuntoDeVenta.Presentacion
 
         private void BtnGuardar_Click(object? sender, EventArgs e)
         {
+            if (_usuario != null && _usuario.IdRol == 2)
+            {
+                MessageBox.Show("Solo los Administradores tienen permisos para modificar productos o precios.", "Permiso Denegado", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
             if (!decimal.TryParse(txtPrecioVenta.Text, out decimal precio))
             {
                 MessageBox.Show("Ingresa un precio válido.", "Validación", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -253,6 +282,12 @@ namespace PuntoDeVenta.Presentacion
 
         private void BtnEliminar_Click(object? sender, EventArgs e)
         {
+            if (_usuario != null && _usuario.IdRol == 2)
+            {
+                MessageBox.Show("Solo los Administradores tienen permisos para eliminar productos.", "Permiso Denegado", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
             if (_idSeleccionado <= 0)
             {
                 MessageBox.Show("Selecciona un producto para eliminar.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);

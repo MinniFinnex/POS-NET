@@ -17,7 +17,8 @@ namespace PuntoDeVenta.Presentacion
 
         private void InicializarComponentes()
         {
-            this.Text = $"Punto de Venta POS - Usuario: {_usuario.NombreCompleto} ({_usuario.RolNombre ?? "Admin"})";
+            string rolEtiqueta = _usuario.IdRol == 1 ? "Administrador" : (_usuario.RolNombre ?? "Cajero");
+            this.Text = $"Punto de Venta POS - Usuario: {_usuario.NombreCompleto} [{rolEtiqueta}]";
             this.Size = new Size(1000, 650);
             this.StartPosition = FormStartPosition.CenterScreen;
             this.BackColor = Color.FromArgb(248, 250, 252);
@@ -41,7 +42,7 @@ namespace PuntoDeVenta.Presentacion
 
             var lblUserInfo = new Label
             {
-                Text = $"👤 {_usuario.NombreCompleto} | Rol: {_usuario.RolNombre ?? "Usuario"}",
+                Text = $"👤 {_usuario.NombreCompleto} | Rol: {rolEtiqueta}",
                 Font = new Font("Segoe UI", 10),
                 ForeColor = Color.FromArgb(203, 213, 225),
                 Anchor = AnchorStyles.Top | AnchorStyles.Right,
@@ -83,7 +84,10 @@ namespace PuntoDeVenta.Presentacion
             }
 
             var btnVentas = CrearBotonMenu("🧾 Nueva Venta", (s, e) => AbrirFormularioEnPanel(new frmVentas(_usuario)));
-            var btnProductos = CrearBotonMenu("📦 Productos", (s, e) => AbrirFormularioEnPanel(new frmProductos()));
+            
+            string textoProd = _usuario.IdRol == 1 ? "📦 Gestión Productos" : "📦 Consultar Catálogo";
+            var btnProductos = CrearBotonMenu(textoProd, (s, e) => AbrirFormularioEnPanel(new frmProductos(_usuario)));
+            
             var btnClientes = CrearBotonMenu("👥 Clientes", (s, e) => AbrirFormularioEnPanel(new frmClientes()));
             var btnSalir = CrearBotonMenu("🚪 Cerrar Sesión", (s, e) => this.Close());
 
