@@ -35,7 +35,7 @@ namespace PuntoDeVenta.Presentacion
 
             var lblTitulo = new Label
             {
-                Text = "👥 Directorio de Clientes",
+                Text = " Directorio de Clientes",
                 Font = new Font("Segoe UI", 14, FontStyle.Bold),
                 Location = new Point(20, 15),
                 AutoSize = true
@@ -49,7 +49,7 @@ namespace PuntoDeVenta.Presentacion
                 Font = new Font("Segoe UI", 9.5f, FontStyle.Bold)
             };
 
-            var lblDoc = new Label { Text = "Documento/DNI:", Location = new Point(15, 28), AutoSize = true, Font = new Font("Segoe UI", 9) };
+            var lblDoc = new Label { Text = "DUI:", Location = new Point(15, 28), AutoSize = true, Font = new Font("Segoe UI", 9) };
             txtDocumento = new TextBox { Location = new Point(15, 50), Size = new Size(130, 25), Font = new Font("Segoe UI", 9) };
 
             var lblNom = new Label { Text = "Nombre Completo:", Location = new Point(155, 28), AutoSize = true, Font = new Font("Segoe UI", 9) };
@@ -79,7 +79,7 @@ namespace PuntoDeVenta.Presentacion
 
             btnGuardar = new Button
             {
-                Text = "💾 Guardar",
+                Text = " Guardar",
                 Location = new Point(470, 102),
                 Size = new Size(110, 32),
                 BackColor = Color.FromArgb(16, 185, 129),
@@ -92,7 +92,7 @@ namespace PuntoDeVenta.Presentacion
 
             btnEliminar = new Button
             {
-                Text = "🗑️ Eliminar",
+                Text = " Eliminar",
                 Location = new Point(595, 102),
                 Size = new Size(110, 32),
                 BackColor = Color.FromArgb(239, 68, 68),
@@ -147,14 +147,9 @@ namespace PuntoDeVenta.Presentacion
                 if (dgvClientes.Columns["Activo"] != null)
                     dgvClientes.Columns["Activo"]!.Visible = false;
             }
-            catch
+            catch (Exception ex)
             {
-                dgvClientes.Columns.Clear();
-                dgvClientes.Columns.Add("Documento", "Documento");
-                dgvClientes.Columns.Add("Nombre", "Nombre");
-                dgvClientes.Columns.Add("Telefono", "Teléfono");
-                dgvClientes.Columns.Add("Email", "Email");
-                dgvClientes.Rows.Add("00000000", "Cliente Mostrador", "0000000000", "cliente@pos.local");
+                MessageBox.Show($"Error al cargar los clientes desde la base de datos:\n{ex.Message}", "Base de Datos", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 

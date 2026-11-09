@@ -10,9 +10,11 @@ namespace PuntoDeVenta.Entidades
         public string? ClienteNombre { get; set; }
         public int IdUsuario { get; set; }
         public string? UsuarioNombre { get; set; }
+        public int? IdCaja { get; set; }
         public decimal Subtotal { get; set; }
         public decimal Impuesto { get; set; }
         public decimal Total { get; set; }
         public string Estado { get; set; } = "COMPLETADA";
+        public System.Collections.Generic.List<DetalleVenta> Detalles { get; set; } = new();
     }
 }

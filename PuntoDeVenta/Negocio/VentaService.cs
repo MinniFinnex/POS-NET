@@ -1,3 +1,6 @@
+
+
+
 using PuntoDeVenta.Datos;
 using PuntoDeVenta.Entidades;
 using System;
@@ -29,5 +32,25 @@ namespace PuntoDeVenta.Negocio
         }
 
         public List<Venta> HistorialVentas() => _repo.ObtenerHistorialVentas();
+
+        public List<Venta> HistorialVentasFiltrado(DateTime inicio, DateTime fin, int? idUsuario = null)
+        {
+            return _repo.ObtenerHistorialVentasFiltrado(inicio, fin, idUsuario);
+        }
+
+        public List<DetalleVenta> ObtenerDetallesPorVenta(int idVenta)
+        {
+            return _repo.ObtenerDetallesPorVenta(idVenta);
+        }
+
+        public List<ProductoVendidoDTO> ObtenerTopProductos(DateTime inicio, DateTime fin, int top = 5)
+        {
+            return _repo.ObtenerTopProductos(inicio, fin, top);
+        }
+
+        public ResumenVentasDTO ObtenerResumen(DateTime inicio, DateTime fin, int? idUsuario = null)
+        {
+            return _repo.ObtenerResumen(inicio, fin, idUsuario);
+        }
     }
 }

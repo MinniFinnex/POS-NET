@@ -1,4 +1,3 @@
-using PuntoDeVenta.Datos;
 using PuntoDeVenta.Entidades;
 using PuntoDeVenta.Negocio;
 using System;
@@ -13,8 +12,6 @@ namespace PuntoDeVenta.Presentacion
         private TextBox txtPassword = null!;
         private Button btnIngresar = null!;
         private Button btnSalir = null!;
-        private Button btnProbarDb = null!;
-        private Label lblEstado = null!;
 
         public Usuario? UsuarioAutenticado { get; private set; }
 
@@ -26,7 +23,7 @@ namespace PuntoDeVenta.Presentacion
         private void InicializarComponentes()
         {
             this.Text = "Punto de Venta - Iniciar Sesión";
-            this.Size = new Size(420, 360);
+            this.Size = new Size(420, 330);
             this.StartPosition = FormStartPosition.CenterScreen;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
@@ -54,13 +51,13 @@ namespace PuntoDeVenta.Presentacion
             {
                 Text = "Usuario:",
                 Font = new Font("Segoe UI", 10, FontStyle.Bold),
-                Location = new Point(30, 100),
+                Location = new Point(30, 95),
                 AutoSize = true
             };
 
             txtUsuario = new TextBox
             {
-                Location = new Point(30, 125),
+                Location = new Point(30, 120),
                 Size = new Size(345, 28),
                 Font = new Font("Segoe UI", 10),
                 Text = "admin"
@@ -70,13 +67,13 @@ namespace PuntoDeVenta.Presentacion
             {
                 Text = "Contraseña:",
                 Font = new Font("Segoe UI", 10, FontStyle.Bold),
-                Location = new Point(30, 165),
+                Location = new Point(30, 160),
                 AutoSize = true
             };
 
             txtPassword = new TextBox
             {
-                Location = new Point(30, 190),
+                Location = new Point(30, 185),
                 Size = new Size(345, 28),
                 Font = new Font("Segoe UI", 10),
                 PasswordChar = '●',
@@ -86,7 +83,7 @@ namespace PuntoDeVenta.Presentacion
             btnIngresar = new Button
             {
                 Text = "Iniciar Sesión",
-                Location = new Point(30, 235),
+                Location = new Point(30, 230),
                 Size = new Size(165, 38),
                 BackColor = Color.FromArgb(37, 99, 235),
                 ForeColor = Color.White,
@@ -100,7 +97,7 @@ namespace PuntoDeVenta.Presentacion
             btnSalir = new Button
             {
                 Text = "Salir",
-                Location = new Point(210, 235),
+                Location = new Point(210, 230),
                 Size = new Size(165, 38),
                 BackColor = Color.FromArgb(226, 232, 240),
                 ForeColor = Color.FromArgb(30, 41, 59),
@@ -111,29 +108,6 @@ namespace PuntoDeVenta.Presentacion
             btnSalir.FlatAppearance.BorderSize = 0;
             btnSalir.Click += (s, e) => Application.Exit();
 
-            btnProbarDb = new Button
-            {
-                Text = "🔌 Probar Conexión SQL",
-                Location = new Point(30, 285),
-                Size = new Size(345, 28),
-                BackColor = Color.Transparent,
-                ForeColor = Color.FromArgb(71, 85, 105),
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 8.5f),
-                Cursor = Cursors.Hand
-            };
-            btnProbarDb.FlatAppearance.BorderSize = 1;
-            btnProbarDb.Click += BtnProbarDb_Click;
-
-            lblEstado = new Label
-            {
-                Location = new Point(30, 318),
-                Size = new Size(345, 20),
-                Font = new Font("Segoe UI", 8),
-                ForeColor = Color.DarkGray,
-                TextAlign = ContentAlignment.MiddleCenter
-            };
-
             this.Controls.Add(lblTitulo);
             this.Controls.Add(lblSubtitulo);
             this.Controls.Add(lblUsuario);
@@ -142,22 +116,6 @@ namespace PuntoDeVenta.Presentacion
             this.Controls.Add(txtPassword);
             this.Controls.Add(btnIngresar);
             this.Controls.Add(btnSalir);
-            this.Controls.Add(btnProbarDb);
-            this.Controls.Add(lblEstado);
-
-            this.AcceptButton = btnIngresar;
-        }
-
-        private void BtnProbarDb_Click(object? sender, EventArgs e)
-        {
-            if (Conexion.ProbarConexion(out string err))
-            {
-                MessageBox.Show("¡Conexión a SQL Server exitosa!", "Base de Datos", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
-            else
-            {
-                MessageBox.Show($"No se pudo conectar a la base de datos:\n{err}\n\nAsegúrate de ejecutar los scripts de Database/ en SQL Server.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            }
         }
 
         private void BtnIngresar_Click(object? sender, EventArgs e)
@@ -165,7 +123,7 @@ namespace PuntoDeVenta.Presentacion
             var service = new UsuarioService();
             try
             {
-                var usuario = service.IniciarSesion(txtUsuario.Text, txtPassword.Text);
+                var usuario = service.IniciarSesion(txtUsuario.Text.Trim(), txtPassword.Text);
                 if (usuario != null)
                 {
                     UsuarioAutenticado = usuario;
@@ -176,53 +134,22 @@ namespace PuntoDeVenta.Presentacion
                 }
                 else
                 {
-                    // Si las credenciales no coinciden en BD pero es el admin por defecto y no hay conexión a BD, ofrecer entrar en modo demo
-                    var respuesta = MessageBox.Show(
-                        "Usuario o contraseña incorrectos o la base de datos aún no contiene el usuario.\n\n¿Deseas iniciar en MODO DEMO?",
-                        "Autenticación",
-                        MessageBoxButtons.YesNo,
-                        MessageBoxIcon.Question);
-
-                    if (respuesta == DialogResult.Yes)
-                    {
-                        UsuarioAutenticado = new Usuario
-                        {
-                            IdUsuario = 1,
-                            NombreCompleto = "Administrador (Demo)",
-                            NombreUsuario = "admin",
-                            IdRol = 1,
-                            RolNombre = "Administrador"
-                        };
-                        this.Hide();
-                        var frm = new frmPrincipal(UsuarioAutenticado);
-                        frm.FormClosed += (s, ev) => this.Close();
-                        frm.Show();
-                    }
+                    MessageBox.Show(
+                        "Usuario o contraseña incorrectos. Verifica tus credenciales.",
+                        "Error de Autenticación",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+                    txtPassword.Clear();
+                    txtPassword.Focus();
                 }
             }
             catch (Exception ex)
             {
-                var resp = MessageBox.Show(
-                    $"Error al consultar la base de datos:\n{ex.Message}\n\n¿Deseas iniciar la aplicación en MODO DEMO?",
-                    "Aviso de Base de Datos",
-                    MessageBoxButtons.YesNo,
-                    MessageBoxIcon.Warning);
-
-                if (resp == DialogResult.Yes)
-                {
-                    UsuarioAutenticado = new Usuario
-                    {
-                        IdUsuario = 1,
-                        NombreCompleto = "Administrador (Demo)",
-                        NombreUsuario = "admin",
-                        IdRol = 1,
-                        RolNombre = "Administrador"
-                    };
-                    this.Hide();
-                    var frm = new frmPrincipal(UsuarioAutenticado);
-                    frm.FormClosed += (s, ev) => this.Close();
-                    frm.Show();
-                }
+                MessageBox.Show(
+                    $"Error al conectar con la base de datos SQL Server:\n\n{ex.Message}\n\nAsegúrate de que el servicio de SQL Server esté en ejecución.",
+                    "Error de Conexión a Base de Datos",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
             }
         }
     }
