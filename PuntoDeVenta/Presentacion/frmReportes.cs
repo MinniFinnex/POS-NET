@@ -1,5 +1,6 @@
 using PuntoDeVenta.Entidades;
 using PuntoDeVenta.Negocio;
+using PuntoDeVenta.Utilidades;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -21,17 +22,15 @@ namespace PuntoDeVenta.Presentacion
         private Button btnFiltrar = null!;
         private Button btnVerTicket = null!;
 
-        // Tarjetas KPI
+        // Tarjetas
         private Label lblKpiTotalVentas = null!;
         private Label lblKpiTransacciones = null!;
         private Label lblKpiTicketPromedio = null!;
         private Label lblKpiArticulos = null!;
 
-        // Pestañas
-        private TabControl tabControl = null!;
+        // Grids
         private DataGridView dgvVentas = null!;
         private DataGridView dgvDetalle = null!;
-        private DataGridView dgvTopProductos = null!;
 
         private List<Venta> _ventasActuales = new();
 
@@ -44,81 +43,88 @@ namespace PuntoDeVenta.Presentacion
 
         private void InicializarComponentes()
         {
-            this.Text = "Historial y Reportes de Ventas";
-            this.BackColor = Color.FromArgb(248, 250, 252);
+            this.Text = "Reportes";
+            this.BackColor = TemaUI.FondoClaro;
             this.Font = new Font("Segoe UI", 9.5f);
 
-            // 1. Encabezado
+            // Encabezado
             var pnlTop = new Panel
             {
                 Dock = DockStyle.Top,
-                Height = 55,
-                BackColor = Color.White,
-                Padding = new Padding(20, 10, 20, 10),
-                BorderStyle = BorderStyle.FixedSingle
+                Height = 50,
+                BackColor = TemaUI.Blanco,
+                Padding = new Padding(20, 10, 20, 10)
             };
+
+            var pnlTopBorder = new Panel
+            {
+                Dock = DockStyle.Bottom,
+                Height = 1,
+                BackColor = TemaUI.Borde
+            };
+            pnlTop.Controls.Add(pnlTopBorder);
 
             var lblTitulo = new Label
             {
-                Text = " Historial y Reportes de Ventas",
-                Font = new Font("Segoe UI", 13, FontStyle.Bold),
-                ForeColor = Color.FromArgb(15, 23, 42),
-                Location = new Point(20, 15),
+                Text = "Reportes y Ventas",
+                Font = new Font("Segoe UI", 12, FontStyle.Bold),
+                ForeColor = TemaUI.TextoOscuro,
+                Location = new Point(20, 14),
                 AutoSize = true
             };
             pnlTop.Controls.Add(lblTitulo);
 
-            // 2. Barra de Filtros
+            // Filtros
             var pnlFiltros = new Panel
             {
                 Dock = DockStyle.Top,
-                Height = 65,
-                BackColor = Color.White,
-                BorderStyle = BorderStyle.FixedSingle,
-                Padding = new Padding(15, 10, 15, 10)
+                Height = 52,
+                BackColor = TemaUI.Blanco,
+                Padding = new Padding(15, 8, 15, 8)
             };
 
-            btnHoy = CrearBotonFiltro("Hoy", (s, e) => EstablecerFiltroHoy());
-            btnHoy.Location = new Point(15, 16);
+            var pnlFiltrosBorder = new Panel
+            {
+                Dock = DockStyle.Bottom,
+                Height = 1,
+                BackColor = TemaUI.Borde
+            };
+            pnlFiltros.Controls.Add(pnlFiltrosBorder);
 
-            btnSemana = CrearBotonFiltro("Últimos 7 Días", (s, e) => EstablecerFiltroSemana());
-            btnSemana.Location = new Point(75, 16);
+            btnHoy = new Button { Text = "Hoy", Location = new Point(15, 11), Size = new Size(60, 28) };
+            TemaUI.AplicarBotonSecundario(btnHoy, new Font("Segoe UI", 8.5f, FontStyle.Bold));
+            btnHoy.Click += (s, e) => EstablecerFiltroHoy();
 
-            btnMes = CrearBotonFiltro("Este Mes", (s, e) => EstablecerFiltroMes());
-            btnMes.Location = new Point(185, 16);
+            btnSemana = new Button { Text = "7 Días", Location = new Point(80, 11), Size = new Size(65, 28) };
+            TemaUI.AplicarBotonSecundario(btnSemana, new Font("Segoe UI", 8.5f, FontStyle.Bold));
+            btnSemana.Click += (s, e) => EstablecerFiltroSemana();
 
-            var lblDesde = new Label { Text = "Desde:", Location = new Point(285, 20), AutoSize = true, Font = new Font("Segoe UI", 9) };
-            dtpInicio = new DateTimePicker { Location = new Point(335, 18), Size = new Size(115, 25), Format = DateTimePickerFormat.Short };
+            btnMes = new Button { Text = "Mes", Location = new Point(150, 11), Size = new Size(60, 28) };
+            TemaUI.AplicarBotonSecundario(btnMes, new Font("Segoe UI", 8.5f, FontStyle.Bold));
+            btnMes.Click += (s, e) => EstablecerFiltroMes();
 
-            var lblHasta = new Label { Text = "Hasta:", Location = new Point(460, 20), AutoSize = true, Font = new Font("Segoe UI", 9) };
-            dtpFin = new DateTimePicker { Location = new Point(510, 18), Size = new Size(115, 25), Format = DateTimePickerFormat.Short };
+            var lblDesde = new Label { Text = "Desde:", Location = new Point(225, 16), AutoSize = true, Font = new Font("Segoe UI", 9), ForeColor = TemaUI.TextoOscuro };
+            dtpInicio = new DateTimePicker { Location = new Point(275, 13), Size = new Size(115, 25), Format = DateTimePickerFormat.Short };
+
+            var lblHasta = new Label { Text = "Hasta:", Location = new Point(400, 16), AutoSize = true, Font = new Font("Segoe UI", 9), ForeColor = TemaUI.TextoOscuro };
+            dtpFin = new DateTimePicker { Location = new Point(450, 13), Size = new Size(115, 25), Format = DateTimePickerFormat.Short };
 
             btnFiltrar = new Button
             {
-                Text = " Consultar",
-                Location = new Point(635, 15),
-                Size = new Size(110, 31),
-                BackColor = Color.FromArgb(37, 99, 235),
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 9, FontStyle.Bold),
-                Cursor = Cursors.Hand
+                Text = "Consultar",
+                Location = new Point(580, 11),
+                Size = new Size(95, 28)
             };
-            btnFiltrar.FlatAppearance.BorderSize = 0;
+            TemaUI.AplicarBotonAzul(btnFiltrar, new Font("Segoe UI", 9, FontStyle.Bold));
             btnFiltrar.Click += (s, e) => CargarDatos();
 
             btnVerTicket = new Button
             {
-                Text = " Ver Ticket",
-                Location = new Point(755, 15),
-                Size = new Size(110, 31),
-                BackColor = Color.FromArgb(16, 185, 129),
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 9, FontStyle.Bold),
-                Cursor = Cursors.Hand
+                Text = "Ver Ticket",
+                Location = new Point(685, 11),
+                Size = new Size(95, 28)
             };
-            btnVerTicket.FlatAppearance.BorderSize = 0;
+            TemaUI.AplicarBotonAzul(btnVerTicket, new Font("Segoe UI", 9, FontStyle.Bold));
             btnVerTicket.Click += BtnVerTicket_Click;
 
             pnlFiltros.Controls.Add(btnHoy);
@@ -131,21 +137,21 @@ namespace PuntoDeVenta.Presentacion
             pnlFiltros.Controls.Add(btnFiltrar);
             pnlFiltros.Controls.Add(btnVerTicket);
 
-            // 3. Tarjetas 
+            // Tarjetas KPI
             var pnlKpis = new Panel
             {
                 Dock = DockStyle.Top,
-                Height = 85,
-                Padding = new Padding(15, 10, 15, 5)
+                Height = 78,
+                Padding = new Padding(15, 8, 15, 6)
             };
 
-            Panel CrearTarjetaKpi(string titulo, out Label lblValor, Color colorAcento, int left)
+            Panel CrearTarjetaKpi(string titulo, out Label lblValor, int left)
             {
                 var card = new Panel
                 {
-                    Location = new Point(left, 5),
-                    Size = new Size(200, 68),
-                    BackColor = Color.White,
+                    Location = new Point(left, 4),
+                    Size = new Size(190, 64),
+                    BackColor = TemaUI.Blanco,
                     BorderStyle = BorderStyle.FixedSingle
                 };
 
@@ -153,8 +159,8 @@ namespace PuntoDeVenta.Presentacion
                 {
                     Text = titulo,
                     Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
-                    ForeColor = Color.FromArgb(100, 116, 139),
-                    Location = new Point(12, 10),
+                    ForeColor = TemaUI.TextoSutil,
+                    Location = new Point(10, 8),
                     AutoSize = true
                 };
 
@@ -162,8 +168,8 @@ namespace PuntoDeVenta.Presentacion
                 {
                     Text = "$0.00",
                     Font = new Font("Segoe UI", 13, FontStyle.Bold),
-                    ForeColor = colorAcento,
-                    Location = new Point(12, 32),
+                    ForeColor = TemaUI.AzulMarino,
+                    Location = new Point(10, 28),
                     AutoSize = true
                 };
 
@@ -172,93 +178,62 @@ namespace PuntoDeVenta.Presentacion
                 return card;
             }
 
-            pnlKpis.Controls.Add(CrearTarjetaKpi("TOTAL VENTAS", out lblKpiTotalVentas, Color.FromArgb(22, 163, 74), 15));
-            pnlKpis.Controls.Add(CrearTarjetaKpi("Nº VENTAS", out lblKpiTransacciones, Color.FromArgb(37, 99, 235), 230));
-            pnlKpis.Controls.Add(CrearTarjetaKpi("TICKET PROMEDIO", out lblKpiTicketPromedio, Color.FromArgb(124, 58, 237), 445));
-            pnlKpis.Controls.Add(CrearTarjetaKpi("ARTÍCULOS VENDIDOS", out lblKpiArticulos, Color.FromArgb(217, 119, 6), 660));
-
-            // 4. Pestañas de Reporte
-            tabControl = new TabControl
-            {
-                Dock = DockStyle.Fill,
-                Font = new Font("Segoe UI", 9.5f)
-            };
-
-            var tabHistorial = new TabPage("🧾 Historial de Ventas y Tickets");
-            tabHistorial.BackColor = Color.FromArgb(248, 250, 252);
+            pnlKpis.Controls.Add(CrearTarjetaKpi("TOTAL VENTAS", out lblKpiTotalVentas, 15));
+            pnlKpis.Controls.Add(CrearTarjetaKpi("Nº VENTAS", out lblKpiTransacciones, 215));
+            pnlKpis.Controls.Add(CrearTarjetaKpi("TICKET PROMEDIO", out lblKpiTicketPromedio, 415));
+            pnlKpis.Controls.Add(CrearTarjetaKpi("ARTÍCULOS VENDIDOS", out lblKpiArticulos, 615));
 
             // Split de Ventas y Detalle
             var split = new SplitContainer
             {
                 Dock = DockStyle.Fill,
                 Orientation = Orientation.Vertical,
-                SplitterDistance = 530,
-                BackColor = Color.FromArgb(226, 232, 240)
+                SplitterDistance = 500,
+                BackColor = TemaUI.Borde
             };
 
             dgvVentas = new DataGridView
             {
-                Dock = DockStyle.Fill,
-                BackgroundColor = Color.White,
-                BorderStyle = BorderStyle.FixedSingle,
-                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
-                MultiSelect = false,
-                ReadOnly = true,
-                RowHeadersVisible = false,
-                AllowUserToAddRows = false
+                Dock = DockStyle.Fill
             };
+            TemaUI.AplicarEstiloGrid(dgvVentas);
             ConfigurarColumnasVentas();
             dgvVentas.SelectionChanged += DgvVentas_SelectionChanged;
 
             dgvDetalle = new DataGridView
             {
-                Dock = DockStyle.Fill,
-                BackgroundColor = Color.White,
-                BorderStyle = BorderStyle.FixedSingle,
-                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
-                MultiSelect = false,
-                ReadOnly = true,
-                RowHeadersVisible = false,
-                AllowUserToAddRows = false
+                Dock = DockStyle.Fill
             };
+            TemaUI.AplicarEstiloGrid(dgvDetalle);
             ConfigurarColumnasDetalle();
 
-            var pnlDetalleWrapper = new Panel { Dock = DockStyle.Fill, Padding = new Padding(5) };
-            var lblDetalleHeader = new Label { Text = "Productos del Ticket Seleccionado:", Font = new Font("Segoe UI", 9, FontStyle.Bold), Dock = DockStyle.Top, Height = 25 };
+            var pnlDetalleWrapper = new Panel
+            {
+                Dock = DockStyle.Fill,
+                BackColor = TemaUI.Blanco,
+                Padding = new Padding(8)
+            };
+
+            var lblDetalleHeader = new Label
+            {
+                Text = "Detalle del Ticket",
+                Font = new Font("Segoe UI", 9.5f, FontStyle.Bold),
+                ForeColor = TemaUI.TextoOscuro,
+                Dock = DockStyle.Top,
+                Height = 26
+            };
             pnlDetalleWrapper.Controls.Add(dgvDetalle);
             pnlDetalleWrapper.Controls.Add(lblDetalleHeader);
 
             split.Panel1.Controls.Add(dgvVentas);
             split.Panel2.Controls.Add(pnlDetalleWrapper);
-            tabHistorial.Controls.Add(split);
 
-            // Pestaña Top Productos
-            var tabTop = new TabPage(" Top Productos Más Vendidos");
-            tabTop.BackColor = Color.FromArgb(248, 250, 252);
-            tabTop.Padding = new Padding(15);
-
-            dgvTopProductos = new DataGridView
+            var pnlContenido = new Panel
             {
                 Dock = DockStyle.Fill,
-                BackgroundColor = Color.White,
-                BorderStyle = BorderStyle.FixedSingle,
-                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
-                MultiSelect = false,
-                ReadOnly = true,
-                RowHeadersVisible = false,
-                AllowUserToAddRows = false
+                Padding = new Padding(15, 0, 15, 15)
             };
-            ConfigurarColumnasTop();
-            tabTop.Controls.Add(dgvTopProductos);
-
-            tabControl.TabPages.Add(tabHistorial);
-            tabControl.TabPages.Add(tabTop);
-
-            var pnlContenido = new Panel { Dock = DockStyle.Fill, Padding = new Padding(15, 0, 15, 15) };
-            pnlContenido.Controls.Add(tabControl);
+            pnlContenido.Controls.Add(split);
 
             this.Controls.Add(pnlContenido);
             this.Controls.Add(pnlKpis);
@@ -266,36 +241,18 @@ namespace PuntoDeVenta.Presentacion
             this.Controls.Add(pnlTop);
         }
 
-        private Button CrearBotonFiltro(string texto, EventHandler onClick)
-        {
-            var btn = new Button
-            {
-                Text = texto,
-                Size = new Size(textsWidth(texto), 28),
-                BackColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 8.5f),
-                Cursor = Cursors.Hand
-            };
-            btn.FlatAppearance.BorderColor = Color.FromArgb(203, 213, 225);
-            btn.Click += onClick;
-            return btn;
-        }
-
-        private static int textsWidth(string text) => text.Length * 8 + 30;
-
         private void ConfigurarColumnasVentas()
         {
             dgvVentas.Columns.Clear();
             dgvVentas.Columns.Add("IdVenta", "Folio");
-            dgvVentas.Columns.Add("Fecha", "Fecha y Hora");
+            dgvVentas.Columns.Add("Fecha", "Fecha");
             dgvVentas.Columns.Add("Cliente", "Cliente");
             dgvVentas.Columns.Add("Cajero", "Cajero");
             dgvVentas.Columns.Add("Total", "Total");
             dgvVentas.Columns.Add("Estado", "Estado");
 
-            dgvVentas.Columns["IdVenta"]!.Width = 60;
-            dgvVentas.Columns["Fecha"]!.Width = 135;
+            dgvVentas.Columns["IdVenta"]!.Width = 65;
+            dgvVentas.Columns["Fecha"]!.Width = 125;
             dgvVentas.Columns["Total"]!.Width = 85;
             dgvVentas.Columns["Total"]!.DefaultCellStyle.Format = "C2";
             dgvVentas.Columns["Estado"]!.Width = 85;
@@ -309,25 +266,11 @@ namespace PuntoDeVenta.Presentacion
             dgvDetalle.Columns.Add("PrecioUnitario", "Precio");
             dgvDetalle.Columns.Add("Subtotal", "Subtotal");
 
-            dgvDetalle.Columns["Cantidad"]!.Width = 50;
-            dgvDetalle.Columns["PrecioUnitario"]!.Width = 75;
+            dgvDetalle.Columns["Cantidad"]!.Width = 55;
+            dgvDetalle.Columns["PrecioUnitario"]!.Width = 80;
             dgvDetalle.Columns["PrecioUnitario"]!.DefaultCellStyle.Format = "C2";
-            dgvDetalle.Columns["Subtotal"]!.Width = 75;
+            dgvDetalle.Columns["Subtotal"]!.Width = 85;
             dgvDetalle.Columns["Subtotal"]!.DefaultCellStyle.Format = "C2";
-        }
-
-        private void ConfigurarColumnasTop()
-        {
-            dgvTopProductos.Columns.Clear();
-            dgvTopProductos.Columns.Add("Codigo", "Código");
-            dgvTopProductos.Columns.Add("Nombre", "Nombre del Producto");
-            dgvTopProductos.Columns.Add("CantidadVendida", "Unidades Vendidas");
-            dgvTopProductos.Columns.Add("TotalRecaudado", "Ingresos Totales");
-
-            dgvTopProductos.Columns["Codigo"]!.Width = 120;
-            dgvTopProductos.Columns["CantidadVendida"]!.Width = 150;
-            dgvTopProductos.Columns["TotalRecaudado"]!.Width = 150;
-            dgvTopProductos.Columns["TotalRecaudado"]!.DefaultCellStyle.Format = "C2";
         }
 
         private void EstablecerFiltroHoy()
@@ -382,35 +325,22 @@ namespace PuntoDeVenta.Presentacion
                 );
             }
 
-            // Calcular 
             int totalTransacciones = _ventasActuales.Count;
             decimal ticketPromedio = totalTransacciones > 0 ? totalVendido / totalTransacciones : 0;
 
             lblKpiTotalVentas.Text = totalVendido.ToString("C2");
-            lblKpiTransacciones.Text = $"{totalTransacciones} ventas";
+            lblKpiTransacciones.Text = $"{totalTransacciones}";
             lblKpiTicketPromedio.Text = ticketPromedio.ToString("C2");
 
             try
             {
                 var resumen = _ventaService.ObtenerResumen(fInicio, fFin);
-                lblKpiArticulos.Text = $"{resumen.TotalArticulos} unid.";
+                lblKpiArticulos.Text = $"{resumen.TotalArticulos}";
             }
             catch
             {
                 lblKpiArticulos.Text = "-";
             }
-
-            // Cargar info Top Productos
-            dgvTopProductos.Rows.Clear();
-            try
-            {
-                var topProds = _ventaService.ObtenerTopProductos(fInicio, fFin, 10);
-                foreach (var tp in topProds)
-                {
-                    dgvTopProductos.Rows.Add(tp.Codigo, tp.Nombre, tp.CantidadVendida, tp.TotalRecaudado);
-                }
-            }
-            catch { }
 
             if (dgvVentas.Rows.Count > 0)
                 dgvVentas.Rows[0].Selected = true;
@@ -461,24 +391,21 @@ namespace PuntoDeVenta.Presentacion
 
             var detalles = _ventaService.ObtenerDetallesPorVenta(idVenta);
 
-            string ticket = 
-                "=========================================\n" +
-                "       COPIA DE TICKET DE VENTA          \n" +
-                "=========================================\n" +
-                $" Folio de Venta : #{venta.IdVenta}\n" +
-                $" Fecha / Hora   : {venta.Fecha:dd/MM/yyyy HH:mm:ss}\n" +
-                $" Cajero         : {venta.UsuarioNombre ?? "Cajero"}\n" +
-                $" Cliente        : {venta.ClienteNombre ?? "Consumidor Final"}\n" +
-                $" Estado         : {venta.Estado}\n" +
+            string ticket =
+                "TICKET DE VENTA\n" +
                 "-----------------------------------------\n" +
-                string.Join("\n", detalles.Select(d => $" {d.Cantidad}x {d.ProductoNombre} (${d.PrecioUnitario:F2}) = {d.Subtotal:C2}")) + "\n" +
+                $"Folio: #{venta.IdVenta}\n" +
+                $"Fecha: {venta.Fecha:dd/MM/yyyy HH:mm}\n" +
+                $"Cajero: {venta.UsuarioNombre ?? "Cajero"}\n" +
+                $"Cliente: {venta.ClienteNombre ?? "Consumidor Final"}\n" +
+                $"Estado: {venta.Estado}\n" +
                 "-----------------------------------------\n" +
-                $" Subtotal : {venta.Subtotal:C2}\n" +
-                $" IVA (16%): {venta.Impuesto:C2}\n" +
-                $" TOTAL    : {venta.Total:C2}\n" +
-                "=========================================\n";
+                string.Join("\n", detalles.Select(d => $"{d.Cantidad}x {d.ProductoNombre} (${d.PrecioUnitario:F2}) = {d.Subtotal:C2}")) + "\n" +
+                "-----------------------------------------\n" +
+                $"TOTAL: {venta.Total:C2}\n" +
+                "-----------------------------------------\n";
 
-            MessageBox.Show(ticket, $"Ticket Venta #{idVenta}", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show(ticket, $"Ticket #{idVenta}", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
     }
 }

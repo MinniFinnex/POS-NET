@@ -1,5 +1,6 @@
 using PuntoDeVenta.Entidades;
 using PuntoDeVenta.Negocio;
+using PuntoDeVenta.Utilidades;
 using System;
 using System.Drawing;
 using System.Windows.Forms;
@@ -13,17 +14,16 @@ namespace PuntoDeVenta.Presentacion
 
         private Caja? _cajaActual;
 
-        // Paneles dinámicos
         private Panel pnlApertura = null!;
         private Panel pnlCierre = null!;
         private Label lblEstadoTurno = null!;
 
-        // Controles Apertura
+        // Apertura
         private TextBox txtMontoInicial = null!;
         private TextBox txtObsApertura = null!;
         private Button btnAbrir = null!;
 
-        // Controles Cierre
+        // Cierre
         private Label lblMontoInicialVal = null!;
         private Label lblVentasTurnoVal = null!;
         private Label lblTotalEsperadoVal = null!;
@@ -45,44 +45,50 @@ namespace PuntoDeVenta.Presentacion
 
         private void InicializarComponentes()
         {
-            this.Text = "Control de Apertura y Cierre de Caja";
-            this.Size = new Size(860, 600);
+            this.Text = "Caja";
+            this.Size = new Size(880, 620);
             this.StartPosition = FormStartPosition.CenterParent;
-            this.BackColor = Color.FromArgb(248, 250, 252);
+            this.BackColor = TemaUI.FondoClaro;
             this.Font = new Font("Segoe UI", 9.5f);
 
-            // Encabezado
+            // Barra superior
             var pnlTop = new Panel
             {
                 Dock = DockStyle.Top,
-                Height = 60,
-                BackColor = Color.White,
-                Padding = new Padding(20, 12, 20, 12),
-                BorderStyle = BorderStyle.FixedSingle
+                Height = 50,
+                BackColor = TemaUI.Blanco,
+                Padding = new Padding(20, 10, 20, 10)
             };
+
+            var pnlTopBorder = new Panel
+            {
+                Dock = DockStyle.Bottom,
+                Height = 1,
+                BackColor = TemaUI.Borde
+            };
+            pnlTop.Controls.Add(pnlTopBorder);
 
             var lblTitulo = new Label
             {
-                Text = " Control de Turnos y Caja Registradora",
-                Font = new Font("Segoe UI", 13, FontStyle.Bold),
-                ForeColor = Color.FromArgb(15, 23, 42),
-                Location = new Point(20, 16),
+                Text = "Control de Caja",
+                Font = new Font("Segoe UI", 12, FontStyle.Bold),
+                ForeColor = TemaUI.TextoOscuro,
+                Location = new Point(20, 14),
                 AutoSize = true
             };
 
             lblEstadoTurno = new Label
             {
                 Text = "Estado: ...",
-                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                Font = new Font("Segoe UI", 9.5f, FontStyle.Bold),
                 Anchor = AnchorStyles.Top | AnchorStyles.Right,
-                Location = new Point(540, 18),
+                Location = new Point(560, 16),
                 AutoSize = true
             };
 
             pnlTop.Controls.Add(lblTitulo);
             pnlTop.Controls.Add(lblEstadoTurno);
 
-            // Contenedor principal dividido
             var pnlCentro = new Panel
             {
                 Dock = DockStyle.Fill,
@@ -93,37 +99,62 @@ namespace PuntoDeVenta.Presentacion
             pnlApertura = new Panel
             {
                 Location = new Point(15, 10),
-                Size = new Size(815, 175),
-                BackColor = Color.White,
+                Size = new Size(830, 140),
+                BackColor = TemaUI.Blanco,
                 BorderStyle = BorderStyle.FixedSingle,
                 Visible = false
             };
 
-            var lblApTitulo = new Label { Text = "Apertura de Turno / Caja", Font = new Font("Segoe UI", 11, FontStyle.Bold), Location = new Point(15, 12), AutoSize = true, ForeColor = Color.FromArgb(15, 23, 42) };
-            var lblApSub = new Label { Text = "Ingresa el fondo de cambio inicial en efectivo para comenzar a registrar ventas:", Font = new Font("Segoe UI", 8.5f), Location = new Point(15, 36), AutoSize = true, ForeColor = Color.FromArgb(100, 116, 139) };
+            var lblApTitulo = new Label
+            {
+                Text = "Apertura de Turno",
+                Font = new Font("Segoe UI", 10.5f, FontStyle.Bold),
+                Location = new Point(15, 12),
+                AutoSize = true,
+                ForeColor = TemaUI.TextoOscuro
+            };
 
-            var lblIni = new Label { Text = "Fondo Inicial en Efectivo ($):", Location = new Point(15, 68), AutoSize = true, Font = new Font("Segoe UI", 9, FontStyle.Bold) };
-            txtMontoInicial = new TextBox { Location = new Point(15, 90), Size = new Size(180, 26), Font = new Font("Segoe UI", 10, FontStyle.Bold), Text = "500.00" };
+            var lblIni = new Label
+            {
+                Text = "Fondo Inicial ($):",
+                Location = new Point(15, 45),
+                AutoSize = true,
+                Font = new Font("Segoe UI", 9, FontStyle.Bold),
+                ForeColor = TemaUI.TextoOscuro
+            };
+            txtMontoInicial = new TextBox
+            {
+                Location = new Point(15, 68),
+                Size = new Size(160, 26),
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                Text = "500.00"
+            };
 
-            var lblObsAp = new Label { Text = "Observaciones (Opcional):", Location = new Point(215, 68), AutoSize = true, Font = new Font("Segoe UI", 9) };
-            txtObsApertura = new TextBox { Location = new Point(215, 90), Size = new Size(380, 26), Font = new Font("Segoe UI", 9.5f) };
+            var lblObsAp = new Label
+            {
+                Text = "Observaciones (Opcional):",
+                Location = new Point(195, 45),
+                AutoSize = true,
+                Font = new Font("Segoe UI", 9),
+                ForeColor = TemaUI.TextoOscuro
+            };
+            txtObsApertura = new TextBox
+            {
+                Location = new Point(195, 68),
+                Size = new Size(410, 26),
+                Font = new Font("Segoe UI", 9.5f)
+            };
 
             btnAbrir = new Button
             {
-                Text = "ABRIR CAJA",
-                Location = new Point(615, 80),
-                Size = new Size(175, 42),
-                BackColor = Color.FromArgb(22, 163, 74),
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 10, FontStyle.Bold),
-                Cursor = Cursors.Hand
+                Text = "Abrir Caja",
+                Location = new Point(625, 62),
+                Size = new Size(180, 36)
             };
-            btnAbrir.FlatAppearance.BorderSize = 0;
+            TemaUI.AplicarBotonAzul(btnAbrir, new Font("Segoe UI", 9.5f, FontStyle.Bold));
             btnAbrir.Click += BtnAbrir_Click;
 
             pnlApertura.Controls.Add(lblApTitulo);
-            pnlApertura.Controls.Add(lblApSub);
             pnlApertura.Controls.Add(lblIni);
             pnlApertura.Controls.Add(txtMontoInicial);
             pnlApertura.Controls.Add(lblObsAp);
@@ -134,45 +165,127 @@ namespace PuntoDeVenta.Presentacion
             pnlCierre = new Panel
             {
                 Location = new Point(15, 10),
-                Size = new Size(815, 175),
-                BackColor = Color.White,
+                Size = new Size(830, 155),
+                BackColor = TemaUI.Blanco,
                 BorderStyle = BorderStyle.FixedSingle,
                 Visible = false
             };
 
-            var lblCiTitulo = new Label { Text = "Cierre y Arqueo de Caja", Font = new Font("Segoe UI", 11, FontStyle.Bold), Location = new Point(15, 10), AutoSize = true, ForeColor = Color.FromArgb(15, 23, 42) };
+            var lblCiTitulo = new Label
+            {
+                Text = "Cierre y Arqueo de Caja",
+                Font = new Font("Segoe UI", 10.5f, FontStyle.Bold),
+                Location = new Point(15, 10),
+                AutoSize = true,
+                ForeColor = TemaUI.TextoOscuro
+            };
 
-            var lblIniText = new Label { Text = "Fondo Inicial:", Location = new Point(15, 38), AutoSize = true, Font = new Font("Segoe UI", 9) };
-            lblMontoInicialVal = new Label { Text = "$0.00", Location = new Point(110, 38), AutoSize = true, Font = new Font("Segoe UI", 9, FontStyle.Bold) };
+            var lblIniText = new Label
+            {
+                Text = "Fondo Inicial:",
+                Location = new Point(15, 36),
+                AutoSize = true,
+                Font = new Font("Segoe UI", 9),
+                ForeColor = TemaUI.TextoSutil
+            };
+            lblMontoInicialVal = new Label
+            {
+                Text = "$0.00",
+                Location = new Point(100, 36),
+                AutoSize = true,
+                Font = new Font("Segoe UI", 9, FontStyle.Bold),
+                ForeColor = TemaUI.TextoOscuro
+            };
 
-            var lblVenText = new Label { Text = "Ventas Turno:", Location = new Point(200, 38), AutoSize = true, Font = new Font("Segoe UI", 9) };
-            lblVentasTurnoVal = new Label { Text = "$0.00", Location = new Point(295, 38), AutoSize = true, Font = new Font("Segoe UI", 9, FontStyle.Bold), ForeColor = Color.FromArgb(22, 163, 74) };
+            var lblVenText = new Label
+            {
+                Text = "Ventas:",
+                Location = new Point(190, 36),
+                AutoSize = true,
+                Font = new Font("Segoe UI", 9),
+                ForeColor = TemaUI.TextoSutil
+            };
+            lblVentasTurnoVal = new Label
+            {
+                Text = "$0.00",
+                Location = new Point(245, 36),
+                AutoSize = true,
+                Font = new Font("Segoe UI", 9, FontStyle.Bold),
+                ForeColor = TemaUI.AzulMarino
+            };
 
-            var lblEspText = new Label { Text = "Total Esperado:", Location = new Point(400, 38), AutoSize = true, Font = new Font("Segoe UI", 9, FontStyle.Bold) };
-            lblTotalEsperadoVal = new Label { Text = "$0.00", Location = new Point(505, 38), AutoSize = true, Font = new Font("Segoe UI", 11, FontStyle.Bold), ForeColor = Color.FromArgb(37, 99, 235) };
+            var lblEspText = new Label
+            {
+                Text = "Esperado:",
+                Location = new Point(340, 36),
+                AutoSize = true,
+                Font = new Font("Segoe UI", 9),
+                ForeColor = TemaUI.TextoSutil
+            };
+            lblTotalEsperadoVal = new Label
+            {
+                Text = "$0.00",
+                Location = new Point(410, 36),
+                AutoSize = true,
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                ForeColor = TemaUI.AzulMarino
+            };
 
-            var lblContado = new Label { Text = "Efectivo Físico Contado ($):", Location = new Point(15, 75), AutoSize = true, Font = new Font("Segoe UI", 9, FontStyle.Bold) };
-            txtMontoCierre = new TextBox { Location = new Point(15, 98), Size = new Size(180, 26), Font = new Font("Segoe UI", 10, FontStyle.Bold) };
+            var lblContado = new Label
+            {
+                Text = "Efectivo Contado ($):",
+                Location = new Point(15, 68),
+                AutoSize = true,
+                Font = new Font("Segoe UI", 9, FontStyle.Bold),
+                ForeColor = TemaUI.TextoOscuro
+            };
+            txtMontoCierre = new TextBox
+            {
+                Location = new Point(15, 90),
+                Size = new Size(160, 26),
+                Font = new Font("Segoe UI", 10, FontStyle.Bold)
+            };
             txtMontoCierre.TextChanged += (s, e) => CalcularDiferencia();
 
-            var lblDif = new Label { Text = "Diferencia:", Location = new Point(205, 75), AutoSize = true, Font = new Font("Segoe UI", 9, FontStyle.Bold) };
-            lblDiferenciaVal = new Label { Text = "$0.00 (Cuadre Exacto)", Location = new Point(205, 100), AutoSize = true, Font = new Font("Segoe UI", 10, FontStyle.Bold), ForeColor = Color.FromArgb(100, 116, 139) };
+            var lblDif = new Label
+            {
+                Text = "Diferencia:",
+                Location = new Point(195, 68),
+                AutoSize = true,
+                Font = new Font("Segoe UI", 9, FontStyle.Bold),
+                ForeColor = TemaUI.TextoOscuro
+            };
+            lblDiferenciaVal = new Label
+            {
+                Text = "$0.00 (Exacto)",
+                Location = new Point(195, 93),
+                AutoSize = true,
+                Font = new Font("Segoe UI", 9.5f, FontStyle.Bold),
+                ForeColor = TemaUI.TextoSutil
+            };
 
-            var lblObsCi = new Label { Text = "Observaciones de Cierre:", Location = new Point(390, 75), AutoSize = true, Font = new Font("Segoe UI", 9) };
-            txtObsCierre = new TextBox { Location = new Point(390, 98), Size = new Size(220, 26), Font = new Font("Segoe UI", 9.5f) };
+            var lblObsCi = new Label
+            {
+                Text = "Observaciones:",
+                Location = new Point(370, 68),
+                AutoSize = true,
+                Font = new Font("Segoe UI", 9),
+                ForeColor = TemaUI.TextoOscuro
+            };
+            txtObsCierre = new TextBox
+            {
+                Location = new Point(370, 90),
+                Size = new Size(240, 26),
+                Font = new Font("Segoe UI", 9.5f)
+            };
 
             btnCerrar = new Button
             {
-                Text = " REALIZAR CIERRE",
-                Location = new Point(625, 85),
-                Size = new Size(175, 45),
-                BackColor = Color.FromArgb(220, 38, 38),
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 10, FontStyle.Bold),
-                Cursor = Cursors.Hand
+                Text = "Cerrar Caja",
+                Location = new Point(625, 80),
+                Size = new Size(180, 40)
             };
-            btnCerrar.FlatAppearance.BorderSize = 0;
+            TemaUI.AplicarBotonAzul(btnCerrar, new Font("Segoe UI", 9.5f, FontStyle.Bold));
             btnCerrar.Click += BtnCerrar_Click;
 
             pnlCierre.Controls.Add(lblCiTitulo);
@@ -190,43 +303,32 @@ namespace PuntoDeVenta.Presentacion
             pnlCierre.Controls.Add(txtObsCierre);
             pnlCierre.Controls.Add(btnCerrar);
 
-            // Historial de Cajas
+            // Historial
             var lblHistTitulo = new Label
             {
-                Text = " Historial de Turnos y Arqueos de Caja",
+                Text = "Historial de Turnos",
                 Font = new Font("Segoe UI", 10, FontStyle.Bold),
-                Location = new Point(15, 195),
+                Location = new Point(15, 175),
                 AutoSize = true,
-                ForeColor = Color.FromArgb(30, 41, 59)
+                ForeColor = TemaUI.TextoOscuro
             };
 
             var btnRefrescar = new Button
             {
-                Text = " Actualizar",
-                Location = new Point(715, 190),
-                Size = new Size(115, 26),
-                BackColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 8.5f),
-                Cursor = Cursors.Hand
+                Text = "Actualizar",
+                Location = new Point(735, 170),
+                Size = new Size(110, 28)
             };
-            btnRefrescar.FlatAppearance.BorderColor = Color.FromArgb(203, 213, 225);
+            TemaUI.AplicarBotonSecundario(btnRefrescar, new Font("Segoe UI", 8.5f, FontStyle.Bold));
             btnRefrescar.Click += (s, e) => { RefrescarEstado(); CargarHistorial(); };
 
             dgvHistorial = new DataGridView
             {
-                Location = new Point(15, 225),
-                Size = new Size(815, 290),
-                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
-                BackgroundColor = Color.White,
-                BorderStyle = BorderStyle.FixedSingle,
-                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
-                MultiSelect = false,
-                ReadOnly = true,
-                RowHeadersVisible = false,
-                AllowUserToAddRows = false
+                Location = new Point(15, 205),
+                Size = new Size(830, 335),
+                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right
             };
+            TemaUI.AplicarEstiloGrid(dgvHistorial);
             ConfigurarColumnasHistorial();
 
             pnlCentro.Controls.Add(pnlApertura);
@@ -244,15 +346,15 @@ namespace PuntoDeVenta.Presentacion
             dgvHistorial.Columns.Clear();
             dgvHistorial.Columns.Add("IdCaja", "Nº Turno");
             dgvHistorial.Columns.Add("Usuario", "Cajero");
-            dgvHistorial.Columns.Add("Apertura", "F. Apertura");
+            dgvHistorial.Columns.Add("Apertura", "Apertura");
             dgvHistorial.Columns.Add("MontoInicial", "Fondo Inicial");
-            dgvHistorial.Columns.Add("Ventas", "Ventas Turno");
-            dgvHistorial.Columns.Add("Cierre", "F. Cierre");
+            dgvHistorial.Columns.Add("Ventas", "Ventas");
+            dgvHistorial.Columns.Add("Cierre", "Cierre");
             dgvHistorial.Columns.Add("MontoCierre", "Contado");
             dgvHistorial.Columns.Add("Diferencia", "Diferencia");
             dgvHistorial.Columns.Add("Estado", "Estado");
 
-            dgvHistorial.Columns["IdCaja"]!.Width = 65;
+            dgvHistorial.Columns["IdCaja"]!.Width = 70;
             dgvHistorial.Columns["MontoInicial"]!.DefaultCellStyle.Format = "C2";
             dgvHistorial.Columns["Ventas"]!.DefaultCellStyle.Format = "C2";
             dgvHistorial.Columns["MontoCierre"]!.DefaultCellStyle.Format = "C2";
@@ -272,16 +374,16 @@ namespace PuntoDeVenta.Presentacion
 
             if (_cajaActual == null)
             {
-                lblEstadoTurno.Text = " CAJA CERRADA";
-                lblEstadoTurno.ForeColor = Color.FromArgb(185, 28, 28);
+                lblEstadoTurno.Text = "Caja Cerrada";
+                lblEstadoTurno.ForeColor = TemaUI.TextoSutil;
                 pnlApertura.Visible = true;
                 pnlCierre.Visible = false;
                 txtMontoInicial.Focus();
             }
             else
             {
-                lblEstadoTurno.Text = $" CAJA ABIERTA #{_cajaActual.IdCaja} ({_cajaActual.FechaApertura:HH:mm})";
-                lblEstadoTurno.ForeColor = Color.FromArgb(22, 101, 52);
+                lblEstadoTurno.Text = $"Caja #{_cajaActual.IdCaja} (Abierta {_cajaActual.FechaApertura:HH:mm})";
+                lblEstadoTurno.ForeColor = TemaUI.AzulMarino;
                 pnlApertura.Visible = false;
                 pnlCierre.Visible = true;
 
@@ -305,23 +407,23 @@ namespace PuntoDeVenta.Presentacion
                 if (diff == 0)
                 {
                     lblDiferenciaVal.Text = "$0.00 (Exacto)";
-                    lblDiferenciaVal.ForeColor = Color.FromArgb(22, 101, 52);
+                    lblDiferenciaVal.ForeColor = TemaUI.AzulMarino;
                 }
                 else if (diff > 0)
                 {
                     lblDiferenciaVal.Text = $"+{diff:C2} (Sobrante)";
-                    lblDiferenciaVal.ForeColor = Color.FromArgb(37, 99, 235);
+                    lblDiferenciaVal.ForeColor = TemaUI.AzulMarino;
                 }
                 else
                 {
                     lblDiferenciaVal.Text = $"{diff:C2} (Faltante)";
-                    lblDiferenciaVal.ForeColor = Color.FromArgb(220, 38, 38);
+                    lblDiferenciaVal.ForeColor = TemaUI.AzulMarino;
                 }
             }
             else
             {
                 lblDiferenciaVal.Text = "Monto inválido";
-                lblDiferenciaVal.ForeColor = Color.DarkGray;
+                lblDiferenciaVal.ForeColor = TemaUI.TextoSutil;
             }
         }
 
@@ -384,13 +486,13 @@ namespace PuntoDeVenta.Presentacion
             decimal esperado = _cajaActual.TotalEsperado;
             decimal diff = montoCierre - esperado;
 
-            string resumen = 
-                "¿Deseas confirmar el cierre de turno con los siguientes datos?\n\n" +
-                $"• Fondo Inicial  : {_cajaActual.MontoInicial:C2}\n" +
-                $"• Ventas Turno   : {_cajaActual.MontoVentas:C2}\n" +
-                $"• Total Esperado : {esperado:C2}\n" +
-                $"• Total Contado  : {montoCierre:C2}\n" +
-                $"• Diferencia     : {diff:C2}\n";
+            string resumen =
+                "¿Confirmas el cierre de turno con los siguientes datos?\n\n" +
+                $"Fondo Inicial: {_cajaActual.MontoInicial:C2}\n" +
+                $"Ventas Turno: {_cajaActual.MontoVentas:C2}\n" +
+                $"Total Esperado: {esperado:C2}\n" +
+                $"Total Contado: {montoCierre:C2}\n" +
+                $"Diferencia: {diff:C2}\n";
 
             var confirm = MessageBox.Show(resumen, "Confirmar Cierre de Caja", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
             if (confirm == DialogResult.Yes)

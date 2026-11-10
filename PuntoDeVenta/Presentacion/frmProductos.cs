@@ -1,5 +1,6 @@
 using PuntoDeVenta.Entidades;
 using PuntoDeVenta.Negocio;
+using PuntoDeVenta.Utilidades;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -51,112 +52,99 @@ namespace PuntoDeVenta.Presentacion
                 txtStock.ReadOnly = true;
                 cboCategoria.Enabled = false;
 
-                btnGuardar.Text = "🔒 Solo Admin";
-                btnEliminar.Text = "🔒 Solo Admin";
+                btnGuardar.Text = "Solo Admin";
+                btnEliminar.Text = "Solo Admin";
             }
         }
 
         private void InicializarComponentes()
         {
-            this.Text = "Catálogo y Gestión de Productos";
-            this.BackColor = Color.FromArgb(248, 250, 252);
+            this.Text = "Productos";
+            this.BackColor = TemaUI.FondoClaro;
             this.Font = new Font("Segoe UI", 9.5f);
 
-            // Encabezado
             var pnlHeader = new Panel
             {
                 Dock = DockStyle.Top,
-                Height = 55,
-                BackColor = Color.White,
+                Height = 50,
+                BackColor = TemaUI.Blanco,
                 Padding = new Padding(20, 10, 20, 10)
             };
 
+            var pnlHeaderBorder = new Panel
+            {
+                Dock = DockStyle.Bottom,
+                Height = 1,
+                BackColor = TemaUI.Borde
+            };
+            pnlHeader.Controls.Add(pnlHeaderBorder);
+
             var lblTitulo = new Label
             {
-                Text = _usuario?.IdRol == 2 ? " Consulta de Productos e Inventario" : " Catálogo y Gestión de Productos",
-                Font = new Font("Segoe UI", 13, FontStyle.Bold),
-                ForeColor = Color.FromArgb(15, 23, 42),
-                Location = new Point(20, 15),
+                Text = _usuario?.IdRol == 2 ? "Consulta de Productos" : "Catálogo de Productos",
+                Font = new Font("Segoe UI", 12, FontStyle.Bold),
+                ForeColor = TemaUI.TextoOscuro,
+                Location = new Point(20, 14),
                 AutoSize = true
             };
             pnlHeader.Controls.Add(lblTitulo);
 
-            // Panel de Datos (Formulario Simple)
             var pnlForm = new Panel
             {
-                Location = new Point(20, 70),
-                Size = new Size(760, 180),
-                BackColor = Color.White,
+                Location = new Point(20, 65),
+                Size = new Size(760, 175),
+                BackColor = TemaUI.Blanco,
                 BorderStyle = BorderStyle.FixedSingle,
                 Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
             };
 
-            // Fila 1: Código, Nombre, Categoría
-            var lblCod = new Label { Text = "Código de Barras:", Location = new Point(15, 12), AutoSize = true, Font = new Font("Segoe UI", 9, FontStyle.Bold) };
+            var lblCod = new Label { Text = "Código:", Location = new Point(15, 12), AutoSize = true, Font = new Font("Segoe UI", 9, FontStyle.Bold), ForeColor = TemaUI.TextoOscuro };
             txtCodigo = new TextBox { Location = new Point(15, 32), Size = new Size(130, 25) };
 
-            var lblNom = new Label { Text = "Nombre del Producto:", Location = new Point(160, 12), AutoSize = true, Font = new Font("Segoe UI", 9, FontStyle.Bold) };
+            var lblNom = new Label { Text = "Nombre:", Location = new Point(160, 12), AutoSize = true, Font = new Font("Segoe UI", 9, FontStyle.Bold), ForeColor = TemaUI.TextoOscuro };
             txtNombre = new TextBox { Location = new Point(160, 32), Size = new Size(260, 25) };
 
-            var lblCat = new Label { Text = "Categoría:", Location = new Point(435, 12), AutoSize = true, Font = new Font("Segoe UI", 9, FontStyle.Bold) };
+            var lblCat = new Label { Text = "Categoría:", Location = new Point(435, 12), AutoSize = true, Font = new Font("Segoe UI", 9, FontStyle.Bold), ForeColor = TemaUI.TextoOscuro };
             cboCategoria = new ComboBox { Location = new Point(435, 32), Size = new Size(150, 25), DropDownStyle = ComboBoxStyle.DropDownList };
 
-            var lblPrecio = new Label { Text = "Precio ($):", Location = new Point(600, 12), AutoSize = true, Font = new Font("Segoe UI", 9, FontStyle.Bold) };
+            var lblPrecio = new Label { Text = "Precio ($):", Location = new Point(600, 12), AutoSize = true, Font = new Font("Segoe UI", 9, FontStyle.Bold), ForeColor = TemaUI.TextoOscuro };
             txtPrecioVenta = new TextBox { Location = new Point(600, 32), Size = new Size(70, 25), Text = "0.00" };
 
-            var lblStock = new Label { Text = "Stock:", Location = new Point(685, 12), AutoSize = true, Font = new Font("Segoe UI", 9, FontStyle.Bold) };
+            var lblStock = new Label { Text = "Stock:", Location = new Point(685, 12), AutoSize = true, Font = new Font("Segoe UI", 9, FontStyle.Bold), ForeColor = TemaUI.TextoOscuro };
             txtStock = new TextBox { Location = new Point(685, 32), Size = new Size(60, 25), Text = "0" };
 
-            // Fila 2: Descripción (Detalle 1)
-            var lblDesc = new Label { Text = "Descripción / Detalles:", Location = new Point(15, 65), AutoSize = true, Font = new Font("Segoe UI", 9, FontStyle.Bold) };
+            var lblDesc = new Label { Text = "Descripción:", Location = new Point(15, 65), AutoSize = true, Font = new Font("Segoe UI", 9, FontStyle.Bold), ForeColor = TemaUI.TextoOscuro };
             txtDescripcion = new TextBox { Location = new Point(15, 85), Size = new Size(405, 25) };
 
-            // Botones de acción
             btnNuevo = new Button
             {
-                Text = " Limpiar",
+                Text = "Limpiar",
                 Location = new Point(435, 82),
-                Size = new Size(95, 32),
-                BackColor = Color.FromArgb(100, 116, 139),
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 9, FontStyle.Bold),
-                Cursor = Cursors.Hand
+                Size = new Size(95, 30)
             };
-            btnNuevo.FlatAppearance.BorderSize = 0;
+            TemaUI.AplicarBotonSecundario(btnNuevo, new Font("Segoe UI", 9, FontStyle.Bold));
             btnNuevo.Click += (s, e) => LimpiarFormulario();
 
             btnGuardar = new Button
             {
-                Text = " Guardar",
+                Text = "Guardar",
                 Location = new Point(540, 82),
-                Size = new Size(100, 32),
-                BackColor = Color.FromArgb(16, 185, 129),
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 9, FontStyle.Bold),
-                Cursor = Cursors.Hand
+                Size = new Size(100, 30)
             };
-            btnGuardar.FlatAppearance.BorderSize = 0;
+            TemaUI.AplicarBotonAzul(btnGuardar, new Font("Segoe UI", 9, FontStyle.Bold));
             btnGuardar.Click += BtnGuardar_Click;
 
             btnEliminar = new Button
             {
-                Text = " Eliminar",
+                Text = "Eliminar",
                 Location = new Point(650, 82),
-                Size = new Size(95, 32),
-                BackColor = Color.FromArgb(239, 68, 68),
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 9, FontStyle.Bold),
-                Cursor = Cursors.Hand
+                Size = new Size(95, 30)
             };
-            btnEliminar.FlatAppearance.BorderSize = 0;
+            TemaUI.AplicarBotonSecundario(btnEliminar, new Font("Segoe UI", 9, FontStyle.Bold));
             btnEliminar.Click += BtnEliminar_Click;
 
-            // Fila 3: Barra de búsqueda rápida
-            var lblBuscar = new Label { Text = " Buscar en catálogo:", Location = new Point(15, 130), AutoSize = true, Font = new Font("Segoe UI", 9) };
-            txtBuscar = new TextBox { Location = new Point(160, 127), Size = new Size(260, 25), PlaceholderText = "Escribe código, nombre o descripción..." };
+            var lblBuscar = new Label { Text = "Buscar:", Location = new Point(15, 130), AutoSize = true, Font = new Font("Segoe UI", 9, FontStyle.Bold), ForeColor = TemaUI.TextoOscuro };
+            txtBuscar = new TextBox { Location = new Point(75, 127), Size = new Size(345, 25), PlaceholderText = "Escribe código, nombre o descripción..." };
             txtBuscar.TextChanged += (s, e) => FiltrarProductos();
 
             pnlForm.Controls.Add(lblCod);
@@ -177,21 +165,13 @@ namespace PuntoDeVenta.Presentacion
             pnlForm.Controls.Add(lblBuscar);
             pnlForm.Controls.Add(txtBuscar);
 
-            // Tabla DataGridView
             dgvProductos = new DataGridView
             {
-                Location = new Point(20, 260),
-                Size = new Size(760, 260),
-                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
-                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
-                MultiSelect = false,
-                ReadOnly = true,
-                BackgroundColor = Color.White,
-                BorderStyle = BorderStyle.FixedSingle,
-                RowHeadersVisible = false,
-                AllowUserToAddRows = false
+                Location = new Point(20, 255),
+                Size = new Size(760, 290),
+                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right
             };
+            TemaUI.AplicarEstiloGrid(dgvProductos);
             dgvProductos.CellClick += DgvProductos_CellClick;
 
             this.Controls.Add(pnlHeader);
@@ -232,7 +212,7 @@ namespace PuntoDeVenta.Presentacion
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error al cargar los productos desde la base de datos:\n{ex.Message}", "Base de Datos", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Error al cargar los productos:\n{ex.Message}", "Base de Datos", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 _todosLosProductos = new List<Producto>();
                 MostrarProductosEnGrid(_todosLosProductos);
             }
@@ -258,7 +238,7 @@ namespace PuntoDeVenta.Presentacion
                 dgvProductos.Columns["PrecioVenta"]!.HeaderText = "Precio";
                 dgvProductos.Columns["PrecioVenta"]!.DefaultCellStyle.Format = "C2";
             }
-            if (dgvProductos.Columns["Stock"] != null) dgvProductos.Columns["Stock"]!.HeaderText = "Stock Disp.";
+            if (dgvProductos.Columns["Stock"] != null) dgvProductos.Columns["Stock"]!.HeaderText = "Stock";
         }
 
         private void FiltrarProductos()
@@ -309,7 +289,7 @@ namespace PuntoDeVenta.Presentacion
         {
             if (_usuario != null && _usuario.IdRol == 2)
             {
-                MessageBox.Show("Solo los Administradores tienen permisos para modificar productos o precios.", "Permiso Denegado", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Solo los Administradores tienen permisos para modificar productos.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
@@ -329,14 +309,14 @@ namespace PuntoDeVenta.Presentacion
 
             if (!decimal.TryParse(txtPrecioVenta.Text, out decimal precio) || precio < 0)
             {
-                MessageBox.Show("Ingresa un precio válido mayor o igual a 0.", "Validación", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Ingresa un precio válido.", "Validación", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 txtPrecioVenta.Focus();
                 return;
             }
 
             if (!int.TryParse(txtStock.Text, out int stock) || stock < 0)
             {
-                MessageBox.Show("Ingresa una cantidad de stock válida mayor o igual a 0.", "Validación", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Ingresa una cantidad de stock válida.", "Validación", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 txtStock.Focus();
                 return;
             }
@@ -370,13 +350,13 @@ namespace PuntoDeVenta.Presentacion
         {
             if (_usuario != null && _usuario.IdRol == 2)
             {
-                MessageBox.Show("Solo los Administradores tienen permisos para eliminar productos.", "Permiso Denegado", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Solo los Administradores tienen permisos para eliminar productos.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
             if (_idSeleccionado <= 0)
             {
-                MessageBox.Show("Selecciona un producto de la tabla para eliminar.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Selecciona un producto de la lista para eliminar.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 

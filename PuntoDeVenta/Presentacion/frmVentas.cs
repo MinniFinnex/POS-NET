@@ -1,6 +1,7 @@
 using PuntoDeVenta.Datos;
 using PuntoDeVenta.Entidades;
 using PuntoDeVenta.Negocio;
+using PuntoDeVenta.Utilidades;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -17,30 +18,24 @@ namespace PuntoDeVenta.Presentacion
         private readonly ClienteRepository _clienteRepo = new();
         private readonly CajaService _cajaService = new();
 
-        // Controles de cabecera y estado
         private Label lblEstadoCaja = null!;
         private Button btnGestionCaja = null!;
         private ComboBox cboClientes = null!;
         private Caja? _cajaActiva;
 
-        // Controles de entrada de productos
         private TextBox txtCodigo = null!;
         private NumericUpDown numCantidad = null!;
         private Button btnAgregar = null!;
-        private Label lblUltimoAgregado = null!;
 
-        // Carrito
         private DataGridView dgvCarrito = null!;
         private Button btnSumar = null!;
         private Button btnRestar = null!;
         private Button btnQuitar = null!;
         private Button btnVaciar = null!;
 
-        // Panel de Cobro
-        private Label lblSubtotalVal = null!;
-        private Label lblImpuestoVal = null!;
         private Label lblTotalVal = null!;
         private TextBox txtPagaCon = null!;
+        private Button btnPagoExacto = null!;
         private Label lblCambioVal = null!;
         private Button btnCobrar = null!;
 
@@ -60,178 +55,299 @@ namespace PuntoDeVenta.Presentacion
         public frmVentas(Usuario usuario)
         {
             _usuario = usuario;
+            this.KeyPreview = true;
+            this.KeyDown += FrmVentas_KeyDown;
+
             InicializarComponentes();
             CargarClientes();
             VerificarEstadoCaja();
         }
 
+        private void FrmVentas_KeyDown(object? sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.F12)
+            {
+                e.Handled = true;
+                if (!txtPagaCon.Focused)
+                {
+                    txtPagaCon.Focus();
+                    txtPagaCon.SelectAll();
+                }
+                else
+                {
+                    BtnCobrar_Click(btnCobrar, EventArgs.Empty);
+                }
+            }
+            else if (e.KeyCode == Keys.Escape)
+            {
+                e.Handled = true;
+                txtCodigo.Clear();
+                txtCodigo.Focus();
+            }
+        }
+
         private void InicializarComponentes()
         {
-            this.Text = "Módulo de Ventas";
-            this.BackColor = Color.FromArgb(248, 250, 252);
+            this.Text = "Ventas";
+            this.BackColor = TemaUI.FondoClaro;
             this.Font = new Font("Segoe UI", 9.5f);
 
-            // 1. Barra Superior de Estado (Caja y Cliente)
+            // Barra superior
             var pnlTop = new Panel
             {
                 Dock = DockStyle.Top,
-                Height = 60,
-                BackColor = Color.White,
-                Padding = new Padding(15, 10, 15, 10),
-                BorderStyle = BorderStyle.FixedSingle
+                Height = 48,
+                BackColor = TemaUI.Blanco,
+                Padding = new Padding(15, 8, 15, 8)
             };
+
+            var pnlTopBorder = new Panel
+            {
+                Dock = DockStyle.Bottom,
+                Height = 1,
+                BackColor = TemaUI.Borde
+            };
+            pnlTop.Controls.Add(pnlTopBorder);
 
             lblEstadoCaja = new Label
             {
-                Text = "Verificando estado de caja...",
+                Text = "Caja...",
                 Font = new Font("Segoe UI", 9.5f, FontStyle.Bold),
-                Location = new Point(15, 18),
+                ForeColor = TemaUI.TextoOscuro,
+                Location = new Point(15, 14),
                 AutoSize = true
             };
 
             btnGestionCaja = new Button
             {
-                Text = " Control de Caja",
-                Location = new Point(320, 14),
-                Size = new Size(130, 30),
-                BackColor = Color.FromArgb(241, 245, 249),
-                ForeColor = Color.FromArgb(30, 41, 59),
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
-                Cursor = Cursors.Hand
+                Text = "Caja",
+                Location = new Point(190, 9),
+                Size = new Size(75, 28)
             };
-            btnGestionCaja.FlatAppearance.BorderColor = Color.FromArgb(203, 213, 225);
+            TemaUI.AplicarBotonAzul(btnGestionCaja, new Font("Segoe UI", 8.5f, FontStyle.Bold));
             btnGestionCaja.Click += (s, e) => AbrirControlCaja();
+
+            var pnlCliente = new Panel
+            {
+                Dock = DockStyle.Right,
+                Width = 320,
+                Height = 36
+            };
 
             var lblCli = new Label
             {
                 Text = "Cliente:",
-                Location = new Point(470, 18),
+                Location = new Point(10, 8),
                 AutoSize = true,
-                Font = new Font("Segoe UI", 9, FontStyle.Bold)
+                Font = new Font("Segoe UI", 9f, FontStyle.Bold),
+                ForeColor = TemaUI.TextoOscuro
             };
 
             cboClientes = new ComboBox
             {
-                Location = new Point(530, 15),
-                Size = new Size(220, 26),
+                Location = new Point(65, 5),
+                Size = new Size(245, 25),
                 DropDownStyle = ComboBoxStyle.DropDownList,
-                Font = new Font("Segoe UI", 9)
+                Font = new Font("Segoe UI", 9f)
             };
+
+            pnlCliente.Controls.Add(lblCli);
+            pnlCliente.Controls.Add(cboClientes);
 
             pnlTop.Controls.Add(lblEstadoCaja);
             pnlTop.Controls.Add(btnGestionCaja);
-            pnlTop.Controls.Add(lblCli);
-            pnlTop.Controls.Add(cboClientes);
+            pnlTop.Controls.Add(pnlCliente);
 
-            // 2. Panel Derecho de Cobro y Totales
+            // Panel Lateral de Cobro
             var pnlCobro = new Panel
             {
                 Dock = DockStyle.Right,
-                Width = 270,
-                BackColor = Color.White,
-                BorderStyle = BorderStyle.FixedSingle,
-                Padding = new Padding(15)
+                Width = 280,
+                BackColor = TemaUI.Blanco,
+                Padding = new Padding(16)
             };
 
-            var lblCobroTitulo = new Label
+            var pnlCobroBorder = new Panel
             {
-                Text = "Resumen de Cuenta",
-                Font = new Font("Segoe UI", 12, FontStyle.Bold),
-                ForeColor = Color.FromArgb(15, 23, 42),
-                Location = new Point(15, 15),
+                Dock = DockStyle.Left,
+                Width = 1,
+                BackColor = TemaUI.Borde
+            };
+            pnlCobro.Controls.Add(pnlCobroBorder);
+
+            var cardTotal = new Panel
+            {
+                Location = new Point(16, 16),
+                Size = new Size(246, 75),
+                BackColor = TemaUI.FondoClaro,
+                BorderStyle = BorderStyle.FixedSingle,
+                Padding = new Padding(10)
+            };
+
+            var lblHeaderTotal = new Label
+            {
+                Text = "TOTAL",
+                Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
+                ForeColor = TemaUI.TextoSutil,
+                Location = new Point(10, 8),
                 AutoSize = true
             };
 
-            var lblSub = new Label { Text = "Subtotal:", Location = new Point(15, 60), AutoSize = true, Font = new Font("Segoe UI", 9.5f) };
-            lblSubtotalVal = new Label { Text = "$0.00", Location = new Point(130, 60), AutoSize = true, Font = new Font("Segoe UI", 9.5f, FontStyle.Bold), TextAlign = ContentAlignment.MiddleRight };
-
-            var lblImp = new Label { Text = "IVA (16%):", Location = new Point(15, 90), AutoSize = true, Font = new Font("Segoe UI", 9.5f) };
-            lblImpuestoVal = new Label { Text = "$0.00", Location = new Point(130, 90), AutoSize = true, Font = new Font("Segoe UI", 9.5f, FontStyle.Bold), TextAlign = ContentAlignment.MiddleRight };
-
-            var sep1 = new Label { BorderStyle = BorderStyle.Fixed3D, Location = new Point(15, 125), Size = new Size(235, 2) };
-
-            var lblTot = new Label { Text = "TOTAL A PAGAR", Location = new Point(15, 135), AutoSize = true, Font = new Font("Segoe UI", 10, FontStyle.Bold), ForeColor = Color.FromArgb(71, 85, 105) };
             lblTotalVal = new Label
             {
                 Text = "$0.00",
-                Location = new Point(15, 160),
-                AutoSize = true,
-                Font = new Font("Segoe UI", 22, FontStyle.Bold),
-                ForeColor = Color.FromArgb(22, 163, 74)
+                Font = new Font("Segoe UI", 22f, FontStyle.Bold),
+                ForeColor = TemaUI.AzulMarino,
+                Location = new Point(6, 26),
+                AutoSize = true
             };
 
-            var sep2 = new Label { BorderStyle = BorderStyle.Fixed3D, Location = new Point(15, 215), Size = new Size(235, 2) };
+            cardTotal.Controls.Add(lblHeaderTotal);
+            cardTotal.Controls.Add(lblTotalVal);
 
-            var lblPaga = new Label { Text = "Paga con ($):", Location = new Point(15, 230), AutoSize = true, Font = new Font("Segoe UI", 9, FontStyle.Bold) };
-            txtPagaCon = new TextBox { Location = new Point(15, 252), Size = new Size(235, 26), Font = new Font("Segoe UI", 11, FontStyle.Bold) };
+            var lblPaga = new Label
+            {
+                Text = "Paga con:",
+                Location = new Point(16, 105),
+                AutoSize = true,
+                Font = new Font("Segoe UI", 9.5f, FontStyle.Bold),
+                ForeColor = TemaUI.TextoOscuro
+            };
+
+            txtPagaCon = new TextBox
+            {
+                Location = new Point(16, 128),
+                Size = new Size(140, 30),
+                Font = new Font("Segoe UI", 12f, FontStyle.Bold),
+                PlaceholderText = "0.00"
+            };
             txtPagaCon.TextChanged += (s, e) => CalcularCambio();
+            txtPagaCon.KeyDown += (s, e) =>
+            {
+                if (e.KeyCode == Keys.Enter)
+                {
+                    e.SuppressKeyPress = true;
+                    BtnCobrar_Click(btnCobrar, EventArgs.Empty);
+                }
+            };
 
-            var lblCambio = new Label { Text = "Cambio:", Location = new Point(15, 290), AutoSize = true, Font = new Font("Segoe UI", 9, FontStyle.Bold) };
-            lblCambioVal = new Label { Text = "$0.00", Location = new Point(80, 288), AutoSize = true, Font = new Font("Segoe UI", 12, FontStyle.Bold), ForeColor = Color.FromArgb(37, 99, 235) };
+            btnPagoExacto = new Button
+            {
+                Text = "Exacto",
+                Location = new Point(164, 127),
+                Size = new Size(98, 32)
+            };
+            TemaUI.AplicarBotonAzul(btnPagoExacto, new Font("Segoe UI", 8.5f, FontStyle.Bold));
+            btnPagoExacto.Click += (s, e) =>
+            {
+                decimal total = ObtenerTotalActual();
+                txtPagaCon.Text = total.ToString("F2");
+                txtPagaCon.Focus();
+                txtPagaCon.SelectAll();
+            };
+
+            var cardCambio = new Panel
+            {
+                Location = new Point(16, 172),
+                Size = new Size(246, 68),
+                BackColor = TemaUI.FondoClaro,
+                BorderStyle = BorderStyle.FixedSingle,
+                Padding = new Padding(10)
+            };
+
+            var lblHeaderCambio = new Label
+            {
+                Text = "CAMBIO",
+                Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
+                ForeColor = TemaUI.TextoSutil,
+                Location = new Point(10, 8),
+                AutoSize = true
+            };
+
+            lblCambioVal = new Label
+            {
+                Text = "$0.00",
+                Font = new Font("Segoe UI", 18f, FontStyle.Bold),
+                ForeColor = TemaUI.AzulMarino,
+                Location = new Point(8, 26),
+                AutoSize = true
+            };
+
+            cardCambio.Controls.Add(lblHeaderCambio);
+            cardCambio.Controls.Add(lblCambioVal);
 
             btnCobrar = new Button
             {
-                Text = " COBRAR",
-                Location = new Point(15, 335),
-                Size = new Size(235, 55),
-                BackColor = Color.FromArgb(22, 163, 74),
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 12, FontStyle.Bold),
-                Cursor = Cursors.Hand
+                Text = "Cobrar",
+                Location = new Point(16, 255),
+                Size = new Size(246, 48)
             };
-            btnCobrar.FlatAppearance.BorderSize = 0;
+            TemaUI.AplicarBotonAzul(btnCobrar, new Font("Segoe UI", 11.5f, FontStyle.Bold));
             btnCobrar.Click += BtnCobrar_Click;
 
-            pnlCobro.Controls.Add(lblCobroTitulo);
-            pnlCobro.Controls.Add(lblSub);
-            pnlCobro.Controls.Add(lblSubtotalVal);
-            pnlCobro.Controls.Add(lblImp);
-            pnlCobro.Controls.Add(lblImpuestoVal);
-            pnlCobro.Controls.Add(sep1);
-            pnlCobro.Controls.Add(lblTot);
-            pnlCobro.Controls.Add(lblTotalVal);
-            pnlCobro.Controls.Add(sep2);
+            pnlCobro.Controls.Add(cardTotal);
             pnlCobro.Controls.Add(lblPaga);
             pnlCobro.Controls.Add(txtPagaCon);
-            pnlCobro.Controls.Add(lblCambio);
-            pnlCobro.Controls.Add(lblCambioVal);
+            pnlCobro.Controls.Add(btnPagoExacto);
+            pnlCobro.Controls.Add(cardCambio);
             pnlCobro.Controls.Add(btnCobrar);
 
-            // 3. Panel Central (Escaneo de Producto y Carrito)
+            // Panel Central
             var pnlCentro = new Panel
             {
                 Dock = DockStyle.Fill,
                 Padding = new Padding(15)
             };
 
-            
+            // Barra de entrada de producto
             var pnlEscaneo = new Panel
             {
                 Dock = DockStyle.Top,
-                Height = 80,
-                BackColor = Color.White,
-                BorderStyle = BorderStyle.FixedSingle,
-                Padding = new Padding(12)
+                Height = 60,
+                BackColor = TemaUI.Blanco,
+                Padding = new Padding(12, 8, 12, 8)
             };
 
-            var lblCod = new Label { Text = "Código de Barras:", Location = new Point(12, 10), AutoSize = true, Font = new Font("Segoe UI", 9, FontStyle.Bold) };
+            var pnlEscaneoBorder = new Panel
+            {
+                Dock = DockStyle.Bottom,
+                Height = 1,
+                BackColor = TemaUI.Borde
+            };
+            pnlEscaneo.Controls.Add(pnlEscaneoBorder);
+
+            var lblCod = new Label
+            {
+                Text = "Código:",
+                Location = new Point(12, 6),
+                AutoSize = true,
+                Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
+                ForeColor = TemaUI.TextoOscuro
+            };
+
             txtCodigo = new TextBox
             {
-                Location = new Point(12, 32),
-                Size = new Size(240, 27),
-                Font = new Font("Segoe UI", 10, FontStyle.Bold),
-                PlaceholderText = "Escanea o escribe código..."
+                Location = new Point(12, 24),
+                Size = new Size(250, 26),
+                Font = new Font("Segoe UI", 10f),
+                PlaceholderText = "Escribir o escanear código..."
             };
             txtCodigo.KeyDown += TxtCodigo_KeyDown;
 
-            var lblCant = new Label { Text = "Cantidad:", Location = new Point(265, 10), AutoSize = true, Font = new Font("Segoe UI", 9, FontStyle.Bold) };
+            var lblCant = new Label
+            {
+                Text = "Cant:",
+                Location = new Point(272, 6),
+                AutoSize = true,
+                Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
+                ForeColor = TemaUI.TextoOscuro
+            };
+
             numCantidad = new NumericUpDown
             {
-                Location = new Point(265, 32),
-                Size = new Size(70, 27),
-                Font = new Font("Segoe UI", 10),
+                Location = new Point(272, 24),
+                Size = new Size(60, 26),
+                Font = new Font("Segoe UI", 10f),
                 Minimum = 1,
                 Maximum = 9999,
                 Value = 1
@@ -239,110 +355,78 @@ namespace PuntoDeVenta.Presentacion
 
             btnAgregar = new Button
             {
-                Text = "➕ Agregar al Carrito",
-                Location = new Point(345, 30),
-                Size = new Size(150, 31),
-                BackColor = Color.FromArgb(37, 99, 235),
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 9, FontStyle.Bold),
-                Cursor = Cursors.Hand
+                Text = "Agregar",
+                Location = new Point(342, 22),
+                Size = new Size(90, 30)
             };
-            btnAgregar.FlatAppearance.BorderSize = 0;
+            TemaUI.AplicarBotonAzul(btnAgregar, new Font("Segoe UI", 9f, FontStyle.Bold));
             btnAgregar.Click += (s, e) => AgregarProductoAlCarrito();
-
-            lblUltimoAgregado = new Label
-            {
-                Text = "Listo para escanear productos.",
-                Location = new Point(505, 37),
-                AutoSize = true,
-                ForeColor = Color.FromArgb(100, 116, 139),
-                Font = new Font("Segoe UI", 8.5f, FontStyle.Italic)
-            };
 
             pnlEscaneo.Controls.Add(lblCod);
             pnlEscaneo.Controls.Add(txtCodigo);
             pnlEscaneo.Controls.Add(lblCant);
             pnlEscaneo.Controls.Add(numCantidad);
             pnlEscaneo.Controls.Add(btnAgregar);
-            pnlEscaneo.Controls.Add(lblUltimoAgregado);
 
-            // Carrito DataGridView
+            // DataGridView del Carrito
             dgvCarrito = new DataGridView
             {
-                Dock = DockStyle.Fill,
-                BackgroundColor = Color.White,
-                BorderStyle = BorderStyle.FixedSingle,
-                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
-                MultiSelect = false,
-                ReadOnly = true,
-                RowHeadersVisible = false,
-                AllowUserToAddRows = false
+                Dock = DockStyle.Fill
             };
+            TemaUI.AplicarEstiloGrid(dgvCarrito);
             ConfigurarColumnasCarrito();
 
-            // Barra inferior del Carrito 
+            // Barra inferior de botones del Carrito
             var pnlBotonesCarrito = new Panel
             {
                 Dock = DockStyle.Bottom,
-                Height = 45,
-                BackColor = Color.FromArgb(241, 245, 249),
-                Padding = new Padding(5)
+                Height = 42,
+                BackColor = TemaUI.Blanco,
+                Padding = new Padding(10, 6, 10, 6)
             };
+
+            var pnlBotonesBorder = new Panel
+            {
+                Dock = DockStyle.Top,
+                Height = 1,
+                BackColor = TemaUI.Borde
+            };
+            pnlBotonesCarrito.Controls.Add(pnlBotonesBorder);
 
             btnSumar = new Button
             {
-                Text = "➕ Sumar (+1)",
-                Location = new Point(10, 7),
-                Size = new Size(110, 30),
-                BackColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
-                Cursor = Cursors.Hand
+                Text = "+1",
+                Location = new Point(10, 6),
+                Size = new Size(55, 28)
             };
-            btnSumar.FlatAppearance.BorderColor = Color.FromArgb(203, 213, 225);
+            TemaUI.AplicarBotonAzul(btnSumar, new Font("Segoe UI", 8.5f, FontStyle.Bold));
             btnSumar.Click += (s, e) => ModificarCantidadSeleccionada(1);
 
             btnRestar = new Button
             {
-                Text = "➖ Restar (-1)",
-                Location = new Point(130, 7),
-                Size = new Size(110, 30),
-                BackColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
-                Cursor = Cursors.Hand
+                Text = "-1",
+                Location = new Point(72, 6),
+                Size = new Size(55, 28)
             };
-            btnRestar.FlatAppearance.BorderColor = Color.FromArgb(203, 213, 225);
+            TemaUI.AplicarBotonAzul(btnRestar, new Font("Segoe UI", 8.5f, FontStyle.Bold));
             btnRestar.Click += (s, e) => ModificarCantidadSeleccionada(-1);
 
             btnQuitar = new Button
             {
-                Text = "Quitar Ítem",
-                Location = new Point(250, 7),
-                Size = new Size(110, 30),
-                BackColor = Color.White,
-                ForeColor = Color.FromArgb(185, 28, 28),
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 8.5f, FontStyle.Bold),
-                Cursor = Cursors.Hand
+                Text = "Quitar",
+                Location = new Point(135, 6),
+                Size = new Size(70, 28)
             };
-            btnQuitar.FlatAppearance.BorderColor = Color.FromArgb(252, 165, 165);
+            TemaUI.AplicarBotonAzul(btnQuitar, new Font("Segoe UI", 8.5f, FontStyle.Bold));
             btnQuitar.Click += (s, e) => QuitarSeleccionado();
 
             btnVaciar = new Button
             {
-                Text = " Vaciar Carrito",
-                Location = new Point(370, 7),
-                Size = new Size(120, 30),
-                BackColor = Color.White,
-                ForeColor = Color.FromArgb(100, 116, 139),
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 8.5f),
-                Cursor = Cursors.Hand
+                Text = "Vaciar",
+                Location = new Point(212, 6),
+                Size = new Size(70, 28)
             };
-            btnVaciar.FlatAppearance.BorderColor = Color.FromArgb(203, 213, 225);
+            TemaUI.AplicarBotonAzul(btnVaciar, new Font("Segoe UI", 8.5f, FontStyle.Bold));
             btnVaciar.Click += (s, e) => VaciarCarrito();
 
             pnlBotonesCarrito.Controls.Add(btnSumar);
@@ -350,7 +434,11 @@ namespace PuntoDeVenta.Presentacion
             pnlBotonesCarrito.Controls.Add(btnQuitar);
             pnlBotonesCarrito.Controls.Add(btnVaciar);
 
-            var pnlCarritoContainer = new Panel { Dock = DockStyle.Fill, Padding = new Padding(0, 10, 0, 0) };
+            var pnlCarritoContainer = new Panel
+            {
+                Dock = DockStyle.Fill,
+                Padding = new Padding(0, 10, 0, 0)
+            };
             pnlCarritoContainer.Controls.Add(dgvCarrito);
             pnlCarritoContainer.Controls.Add(pnlBotonesCarrito);
 
@@ -368,21 +456,27 @@ namespace PuntoDeVenta.Presentacion
             dgvCarrito.Columns.Add("IdProducto", "Id");
             dgvCarrito.Columns.Add("Codigo", "Código");
             dgvCarrito.Columns.Add("Nombre", "Producto");
-            dgvCarrito.Columns.Add("Stock", "Stock Disp.");
+            dgvCarrito.Columns.Add("Stock", "Stock");
             dgvCarrito.Columns.Add("Cantidad", "Cant.");
-            dgvCarrito.Columns.Add("PrecioUnitario", "Precio Unit.");
-            dgvCarrito.Columns.Add("Subtotal", "Subtotal");
+            dgvCarrito.Columns.Add("PrecioUnitario", "Precio");
+            dgvCarrito.Columns.Add("Subtotal", "Total");
 
             dgvCarrito.Columns["IdProducto"]!.Visible = false;
-            dgvCarrito.Columns["Codigo"]!.Width = 100;
+            dgvCarrito.Columns["Codigo"]!.Width = 110;
             dgvCarrito.Columns["Nombre"]!.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-            dgvCarrito.Columns["Stock"]!.Width = 90;
-            dgvCarrito.Columns["Cantidad"]!.Width = 70;
-            dgvCarrito.Columns["PrecioUnitario"]!.Width = 95;
+            dgvCarrito.Columns["Stock"]!.Width = 70;
+            dgvCarrito.Columns["Cantidad"]!.Width = 65;
+            dgvCarrito.Columns["PrecioUnitario"]!.Width = 90;
             dgvCarrito.Columns["Subtotal"]!.Width = 100;
+
+            dgvCarrito.Columns["Stock"]!.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            dgvCarrito.Columns["Cantidad"]!.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            dgvCarrito.Columns["PrecioUnitario"]!.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+            dgvCarrito.Columns["Subtotal"]!.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
 
             dgvCarrito.Columns["PrecioUnitario"]!.DefaultCellStyle.Format = "C2";
             dgvCarrito.Columns["Subtotal"]!.DefaultCellStyle.Format = "C2";
+            dgvCarrito.Columns["Subtotal"]!.DefaultCellStyle.Font = new Font("Segoe UI", 9.5f, FontStyle.Bold);
         }
 
         public void VerificarEstadoCaja()
@@ -392,19 +486,21 @@ namespace PuntoDeVenta.Presentacion
                 _cajaActiva = _cajaService.ObtenerCajaAbierta(_usuario.IdUsuario > 0 ? _usuario.IdUsuario : 1);
                 if (_cajaActiva != null)
                 {
-                    lblEstadoCaja.Text = $" Caja Abierta #{_cajaActiva.IdCaja} | Monto Inicial: {_cajaActiva.MontoInicial:C2} ({_cajaActiva.FechaApertura:HH:mm})";
-                    lblEstadoCaja.ForeColor = Color.FromArgb(22, 101, 52);
+                    lblEstadoCaja.Text = $"Caja #{_cajaActiva.IdCaja} (Abierta)";
+                    lblEstadoCaja.ForeColor = TemaUI.TextoOscuro;
+                    btnGestionCaja.Text = "Caja";
                 }
                 else
                 {
-                    lblEstadoCaja.Text = "🔴 CAJA CERRADA (Se requiere apertura para registrar ventas)";
-                    lblEstadoCaja.ForeColor = Color.FromArgb(185, 28, 28);
+                    lblEstadoCaja.Text = "Caja Cerrada";
+                    lblEstadoCaja.ForeColor = TemaUI.TextoOscuro;
+                    btnGestionCaja.Text = "Abrir";
                 }
             }
-            catch (Exception)
+            catch
             {
-                lblEstadoCaja.Text = "⚠️ Error de conexión a Base de Datos";
-                lblEstadoCaja.ForeColor = Color.FromArgb(185, 28, 28);
+                lblEstadoCaja.Text = "Sin conexión a caja";
+                lblEstadoCaja.ForeColor = TemaUI.TextoSutil;
             }
         }
 
@@ -432,9 +528,8 @@ namespace PuntoDeVenta.Presentacion
                     cboClientes.SelectedIndex = 0;
                 }
             }
-            catch (Exception ex)
+            catch
             {
-                MessageBox.Show($"Error al cargar clientes desde la base de datos:\n{ex.Message}", "Base de Datos", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 cboClientes.Items.Add("Consumidor Final");
                 cboClientes.SelectedIndex = 0;
             }
@@ -464,29 +559,27 @@ namespace PuntoDeVenta.Presentacion
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error al consultar el producto en la base de datos:\n{ex.Message}", "Error de Base de Datos", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Error al consultar el producto:\n{ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
             if (prod == null)
             {
-                MessageBox.Show($"No se encontró ningún producto con el código '{codigo}' en la base de datos.", "Producto No Encontrado", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show($"No se encontró producto con código '{codigo}'.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 txtCodigo.SelectAll();
                 txtCodigo.Focus();
                 return;
             }
 
-            // Buscar si ya existe en el carrito
             var itemExistente = _carrito.Find(x => x.IdProducto == prod.IdProducto);
             int cantidadActualEnCarrito = itemExistente?.Cantidad ?? 0;
             int cantidadFinal = cantidadActualEnCarrito + cantidadAAgregar;
 
-            // Validación de stock: no permitir acumular más del stock real
             if (cantidadFinal > prod.Stock)
             {
                 MessageBox.Show(
-                    $"Stock insuficiente para '{prod.Nombre}'.\n\nStock Disponible: {prod.Stock}\nEn carrito: {cantidadActualEnCarrito}\nIntentando agregar: {cantidadAAgregar}",
-                    "Stock Superado",
+                    $"Stock insuficiente para '{prod.Nombre}'.\nDisponible: {prod.Stock}\nEn carrito: {cantidadActualEnCarrito}",
+                    "Stock",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Warning);
                 txtCodigo.SelectAll();
@@ -496,13 +589,10 @@ namespace PuntoDeVenta.Presentacion
 
             if (itemExistente != null)
             {
-                // ACUMULAR CANTIDAD EN EL MISMO ÍTEM
                 itemExistente.Cantidad = cantidadFinal;
-                lblUltimoAgregado.Text = $"Acumulado: {prod.Nombre} (Total: {itemExistente.Cantidad})";
             }
             else
             {
-                // AGREGAR NUEVO ÍTEM
                 _carrito.Add(new ItemCarrito
                 {
                     IdProducto = prod.IdProducto,
@@ -512,12 +602,10 @@ namespace PuntoDeVenta.Presentacion
                     Cantidad = cantidadAAgregar,
                     PrecioUnitario = prod.PrecioVenta
                 });
-                lblUltimoAgregado.Text = $"Agregado: {prod.Nombre} x{cantidadAAgregar}";
             }
 
             ActualizarTablaCarrito();
 
-            // Limpiar código y restablecer cantidad a 1 para el siguiente escaneo
             txtCodigo.Clear();
             numCantidad.Value = 1;
             txtCodigo.Focus();
@@ -525,11 +613,7 @@ namespace PuntoDeVenta.Presentacion
 
         private void ModificarCantidadSeleccionada(int delta)
         {
-            if (dgvCarrito.SelectedRows.Count == 0)
-            {
-                MessageBox.Show("Selecciona un producto del carrito.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                return;
-            }
+            if (dgvCarrito.SelectedRows.Count == 0) return;
 
             int index = dgvCarrito.SelectedRows[0].Index;
             if (index < 0 || index >= _carrito.Count) return;
@@ -545,7 +629,7 @@ namespace PuntoDeVenta.Presentacion
             {
                 if (nuevaCantidad > item.StockDisponible)
                 {
-                    MessageBox.Show($"No puedes superar el stock disponible ({item.StockDisponible}) de este producto.", "Stock Máximo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show($"Stock máximo disponible: {item.StockDisponible}.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
                 item.Cantidad = nuevaCantidad;
@@ -570,8 +654,7 @@ namespace PuntoDeVenta.Presentacion
         private void VaciarCarrito()
         {
             if (_carrito.Count == 0) return;
-            var resp = MessageBox.Show("¿Seguro que deseas vaciar todos los productos del carrito actual?", "Confirmar", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-            if (resp == DialogResult.Yes)
+            if (MessageBox.Show("¿Vaciar la lista actual?", "Confirmar", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
             {
                 _carrito.Clear();
                 ActualizarTablaCarrito();
@@ -582,11 +665,11 @@ namespace PuntoDeVenta.Presentacion
         private void ActualizarTablaCarrito()
         {
             dgvCarrito.Rows.Clear();
-            decimal subtotal = 0;
+            decimal total = 0;
 
             foreach (var item in _carrito)
             {
-                subtotal += item.Subtotal;
+                total += item.Subtotal;
                 dgvCarrito.Rows.Add(
                     item.IdProducto,
                     item.Codigo,
@@ -598,20 +681,13 @@ namespace PuntoDeVenta.Presentacion
                 );
             }
 
-            decimal impuesto = subtotal * 0.16m;
-            decimal total = subtotal + impuesto;
-
-            lblSubtotalVal.Text = subtotal.ToString("C2");
-            lblImpuestoVal.Text = impuesto.ToString("C2");
             lblTotalVal.Text = total.ToString("C2");
-
             CalcularCambio();
         }
 
         private decimal ObtenerTotalActual()
         {
-            decimal subtotal = _carrito.Sum(x => x.Subtotal);
-            return subtotal + (subtotal * 0.16m);
+            return _carrito.Sum(x => x.Subtotal);
         }
 
         private void CalcularCambio()
@@ -621,12 +697,10 @@ namespace PuntoDeVenta.Presentacion
             {
                 decimal cambio = pagaCon - total;
                 lblCambioVal.Text = cambio.ToString("C2");
-                lblCambioVal.ForeColor = Color.FromArgb(22, 101, 52);
             }
             else
             {
                 lblCambioVal.Text = "$0.00";
-                lblCambioVal.ForeColor = Color.FromArgb(100, 116, 139);
             }
         }
 
@@ -634,18 +708,17 @@ namespace PuntoDeVenta.Presentacion
         {
             if (_carrito.Count == 0)
             {
-                MessageBox.Show("El carrito de compras está vacío. Agrega al menos un producto para cobrar.", "Carrito Vacío", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("No hay productos en la lista.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 txtCodigo.Focus();
                 return;
             }
 
-            // DETALLE 4: Comprobar si la caja está abierta
             VerificarEstadoCaja();
             if (_cajaActiva == null)
             {
                 var resp = MessageBox.Show(
-                    "Actualmente no hay una caja abierta para este turno.\n\n¿Deseas abrir la caja ahora para poder registrar la venta?",
-                    "Apertura de Caja Requerida",
+                    "No hay una caja abierta.\n¿Deseas abrir la caja ahora?",
+                    "Caja Requerida",
                     MessageBoxButtons.YesNo,
                     MessageBoxIcon.Question);
 
@@ -654,7 +727,7 @@ namespace PuntoDeVenta.Presentacion
                     AbrirControlCaja();
                     if (_cajaActiva == null)
                     {
-                        MessageBox.Show("Debes realizar la apertura de caja antes de cobrar la venta.", "Caja Cerrada", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        MessageBox.Show("Se requiere abrir la caja antes de cobrar.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         return;
                     }
                 }
@@ -664,16 +737,14 @@ namespace PuntoDeVenta.Presentacion
                 }
             }
 
-            decimal subtotal = _carrito.Sum(x => x.Subtotal);
-            decimal impuesto = subtotal * 0.16m;
-            decimal total = subtotal + impuesto;
-
+            decimal total = ObtenerTotalActual();
             decimal pagaCon = 0;
+
             if (!string.IsNullOrWhiteSpace(txtPagaCon.Text))
             {
                 if (!decimal.TryParse(txtPagaCon.Text, out pagaCon) || pagaCon < total)
                 {
-                    MessageBox.Show($"El monto ingresado en 'Paga con' (${pagaCon:F2}) es menor al total de la cuenta (${total:F2}).", "Monto Insuficiente", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show($"El monto (${pagaCon:F2}) es menor al total (${total:F2}).", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     txtPagaCon.Focus();
                     return;
                 }
@@ -699,55 +770,50 @@ namespace PuntoDeVenta.Presentacion
                 IdCliente = idCliente,
                 IdUsuario = _usuario.IdUsuario > 0 ? _usuario.IdUsuario : 1,
                 IdCaja = _cajaActiva?.IdCaja,
-                Subtotal = subtotal,
-                Impuesto = impuesto,
+                Subtotal = total,
+                Impuesto = 0m,
                 Total = total,
                 Estado = "COMPLETADA"
             };
 
-            var detalles = _carrito.Select(c => new DetalleVenta
+            var detalles = _carrito.Select(item => new DetalleVenta
             {
-                IdProducto = c.IdProducto,
-                ProductoNombre = c.Nombre,
-                Cantidad = c.Cantidad,
-                PrecioUnitario = c.PrecioUnitario,
-                Subtotal = c.Subtotal
+                IdProducto = item.IdProducto,
+                ProductoNombre = item.Nombre,
+                Cantidad = item.Cantidad,
+                PrecioUnitario = item.PrecioUnitario,
+                Subtotal = item.Subtotal
             }).ToList();
 
             var res = _ventaService.ProcesarVenta(venta, detalles);
             if (res.Exito)
             {
-                string mensajeTicket = 
-                    "=========================================\n" +
-                    "           TICKET DE VENTA               \n" +
-                    "=========================================\n" +
-                    $" Folio de Venta : #{res.IdVenta}\n" +
-                    $" Fecha / Hora   : {DateTime.Now:dd/MM/yyyy HH:mm:ss}\n" +
-                    $" Cajero         : {_usuario.NombreCompleto}\n" +
-                    $" Cliente        : {clienteNombre}\n" +
-                    $" Caja / Turno   : #{_cajaActiva?.IdCaja ?? 1}\n" +
+                string mensajeTicket =
+                    "TICKET DE VENTA\n" +
                     "-----------------------------------------\n" +
-                    string.Join("\n", _carrito.Select(i => $" {i.Cantidad}x {i.Nombre} (${i.PrecioUnitario:F2}) = {i.Subtotal:C2}")) + "\n" +
+                    $"Folio: #{res.IdVenta}\n" +
+                    $"Fecha: {DateTime.Now:dd/MM/yyyy HH:mm}\n" +
+                    $"Cajero: {_usuario.NombreCompleto}\n" +
+                    $"Cliente: {clienteNombre}\n" +
                     "-----------------------------------------\n" +
-                    $" Subtotal : {subtotal:C2}\n" +
-                    $" IVA (16%): {impuesto:C2}\n" +
-                    $" TOTAL    : {total:C2}\n" +
-                    $" Paga con : {pagaCon:C2}\n" +
-                    $" Cambio   : {cambio:C2}\n" +
-                    "=========================================\n" +
-                    "      ¡Gracias por su compra!            \n" +
-                    "=========================================";
+                    string.Join("\n", _carrito.Select(i => $"{i.Cantidad}x {i.Nombre} = {i.Subtotal:C2}")) + "\n" +
+                    "-----------------------------------------\n" +
+                    $"TOTAL: {total:C2}\n" +
+                    $"PAGA CON: {pagaCon:C2}\n" +
+                    $"CAMBIO: {cambio:C2}\n" +
+                    "-----------------------------------------\n" +
+                    "Gracias por su compra.";
 
                 MessageBox.Show(
                     mensajeTicket,
-                    $"¡Venta #{res.IdVenta} Exitosa!",
+                    $"Venta #{res.IdVenta} Registrada",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Information);
 
                 _carrito.Clear();
                 txtPagaCon.Clear();
                 lblCambioVal.Text = "$0.00";
-                lblUltimoAgregado.Text = "Venta anterior cobrada con éxito.";
+
                 ActualizarTablaCarrito();
                 txtCodigo.Focus();
                 VerificarEstadoCaja();
@@ -755,8 +821,8 @@ namespace PuntoDeVenta.Presentacion
             else
             {
                 MessageBox.Show(
-                    $"No se pudo procesar la venta:\n\n{res.Mensaje}",
-                    "Error al Cobrar",
+                    $"No se pudo procesar la venta:\n{res.Mensaje}",
+                    "Error",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
             }

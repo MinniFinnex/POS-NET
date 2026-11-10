@@ -1,5 +1,6 @@
 using PuntoDeVenta.Entidades;
 using PuntoDeVenta.Negocio;
+using PuntoDeVenta.Utilidades;
 using System;
 using System.Drawing;
 using System.Windows.Forms;
@@ -22,43 +23,36 @@ namespace PuntoDeVenta.Presentacion
 
         private void InicializarComponentes()
         {
-            this.Text = "Punto de Venta - Iniciar Sesión";
-            this.Size = new Size(420, 330);
+            this.Text = "Iniciar Sesión";
+            this.Size = new Size(380, 290);
             this.StartPosition = FormStartPosition.CenterScreen;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
-            this.BackColor = Color.FromArgb(245, 247, 250);
+            this.BackColor = TemaUI.FondoClaro;
+            this.Font = new Font("Segoe UI", 9.5f);
 
             var lblTitulo = new Label
             {
-                Text = "🛒 Sistema POS",
-                Font = new Font("Segoe UI", 18, FontStyle.Bold),
-                ForeColor = Color.FromArgb(30, 41, 59),
-                Location = new Point(30, 20),
-                AutoSize = true
-            };
-
-            var lblSubtitulo = new Label
-            {
-                Text = "Ingresa tus credenciales para acceder",
-                Font = new Font("Segoe UI", 9.5f),
-                ForeColor = Color.FromArgb(100, 116, 139),
-                Location = new Point(32, 58),
+                Text = "SISTEMA POS",
+                Font = new Font("Segoe UI", 16, FontStyle.Bold),
+                ForeColor = TemaUI.AzulMarino,
+                Location = new Point(30, 22),
                 AutoSize = true
             };
 
             var lblUsuario = new Label
             {
                 Text = "Usuario:",
-                Font = new Font("Segoe UI", 10, FontStyle.Bold),
-                Location = new Point(30, 95),
+                Font = new Font("Segoe UI", 9.5f, FontStyle.Bold),
+                ForeColor = TemaUI.TextoOscuro,
+                Location = new Point(30, 68),
                 AutoSize = true
             };
 
             txtUsuario = new TextBox
             {
-                Location = new Point(30, 120),
-                Size = new Size(345, 28),
+                Location = new Point(30, 90),
+                Size = new Size(305, 27),
                 Font = new Font("Segoe UI", 10),
                 Text = "admin"
             };
@@ -66,50 +60,48 @@ namespace PuntoDeVenta.Presentacion
             var lblPassword = new Label
             {
                 Text = "Contraseña:",
-                Font = new Font("Segoe UI", 10, FontStyle.Bold),
-                Location = new Point(30, 160),
+                Font = new Font("Segoe UI", 9.5f, FontStyle.Bold),
+                ForeColor = TemaUI.TextoOscuro,
+                Location = new Point(30, 126),
                 AutoSize = true
             };
 
             txtPassword = new TextBox
             {
-                Location = new Point(30, 185),
-                Size = new Size(345, 28),
+                Location = new Point(30, 148),
+                Size = new Size(305, 27),
                 Font = new Font("Segoe UI", 10),
                 PasswordChar = '●',
                 Text = "admin123"
             };
+            txtPassword.KeyDown += (s, e) =>
+            {
+                if (e.KeyCode == Keys.Enter)
+                {
+                    e.SuppressKeyPress = true;
+                    BtnIngresar_Click(btnIngresar, EventArgs.Empty);
+                }
+            };
 
             btnIngresar = new Button
             {
-                Text = "Iniciar Sesión",
-                Location = new Point(30, 230),
-                Size = new Size(165, 38),
-                BackColor = Color.FromArgb(37, 99, 235),
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 10, FontStyle.Bold),
-                Cursor = Cursors.Hand
+                Text = "Ingresar",
+                Location = new Point(30, 192),
+                Size = new Size(145, 36)
             };
-            btnIngresar.FlatAppearance.BorderSize = 0;
+            TemaUI.AplicarBotonAzul(btnIngresar, new Font("Segoe UI", 9.5f, FontStyle.Bold));
             btnIngresar.Click += BtnIngresar_Click;
 
             btnSalir = new Button
             {
                 Text = "Salir",
-                Location = new Point(210, 230),
-                Size = new Size(165, 38),
-                BackColor = Color.FromArgb(226, 232, 240),
-                ForeColor = Color.FromArgb(30, 41, 59),
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 10),
-                Cursor = Cursors.Hand
+                Location = new Point(190, 192),
+                Size = new Size(145, 36)
             };
-            btnSalir.FlatAppearance.BorderSize = 0;
+            TemaUI.AplicarBotonSecundario(btnSalir, new Font("Segoe UI", 9.5f, FontStyle.Bold));
             btnSalir.Click += (s, e) => Application.Exit();
 
             this.Controls.Add(lblTitulo);
-            this.Controls.Add(lblSubtitulo);
             this.Controls.Add(lblUsuario);
             this.Controls.Add(txtUsuario);
             this.Controls.Add(lblPassword);
@@ -135,8 +127,8 @@ namespace PuntoDeVenta.Presentacion
                 else
                 {
                     MessageBox.Show(
-                        "Usuario o contraseña incorrectos. Verifica tus credenciales.",
-                        "Error de Autenticación",
+                        "Usuario o contraseña incorrectos.",
+                        "Error de Acceso",
                         MessageBoxButtons.OK,
                         MessageBoxIcon.Warning);
                     txtPassword.Clear();
@@ -146,8 +138,8 @@ namespace PuntoDeVenta.Presentacion
             catch (Exception ex)
             {
                 MessageBox.Show(
-                    $"Error al conectar con la base de datos SQL Server:\n\n{ex.Message}\n\nAsegúrate de que el servicio de SQL Server esté en ejecución.",
-                    "Error de Conexión a Base de Datos",
+                    $"Error al conectar con la base de datos:\n\n{ex.Message}",
+                    "Error de Conexión",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
             }

@@ -1,5 +1,6 @@
 using PuntoDeVenta.Datos;
 using PuntoDeVenta.Entidades;
+using PuntoDeVenta.Utilidades;
 using System;
 using System.Drawing;
 using System.Windows.Forms;
@@ -29,110 +30,112 @@ namespace PuntoDeVenta.Presentacion
 
         private void InicializarComponentes()
         {
-            this.Text = "Gestión de Clientes";
-            this.BackColor = Color.FromArgb(248, 250, 252);
+            this.Text = "Clientes";
+            this.BackColor = TemaUI.FondoClaro;
             this.Font = new Font("Segoe UI", 9.5f);
+
+            var pnlHeader = new Panel
+            {
+                Dock = DockStyle.Top,
+                Height = 50,
+                BackColor = TemaUI.Blanco,
+                Padding = new Padding(20, 10, 20, 10)
+            };
+
+            var pnlHeaderBorder = new Panel
+            {
+                Dock = DockStyle.Bottom,
+                Height = 1,
+                BackColor = TemaUI.Borde
+            };
+            pnlHeader.Controls.Add(pnlHeaderBorder);
 
             var lblTitulo = new Label
             {
-                Text = " Directorio de Clientes",
-                Font = new Font("Segoe UI", 14, FontStyle.Bold),
-                Location = new Point(20, 15),
+                Text = "Directorio de Clientes",
+                Font = new Font("Segoe UI", 12, FontStyle.Bold),
+                ForeColor = TemaUI.TextoOscuro,
+                Location = new Point(20, 14),
                 AutoSize = true
             };
+            pnlHeader.Controls.Add(lblTitulo);
 
-            var grpDatos = new GroupBox
+            var pnlForm = new Panel
             {
-                Text = "Datos del Cliente",
-                Location = new Point(20, 50),
-                Size = new Size(720, 150),
-                Font = new Font("Segoe UI", 9.5f, FontStyle.Bold)
+                Location = new Point(20, 65),
+                Size = new Size(760, 145),
+                BackColor = TemaUI.Blanco,
+                BorderStyle = BorderStyle.FixedSingle,
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
             };
 
-            var lblDoc = new Label { Text = "DUI:", Location = new Point(15, 28), AutoSize = true, Font = new Font("Segoe UI", 9) };
-            txtDocumento = new TextBox { Location = new Point(15, 50), Size = new Size(130, 25), Font = new Font("Segoe UI", 9) };
+            var lblDoc = new Label { Text = "Documento:", Location = new Point(15, 12), AutoSize = true, Font = new Font("Segoe UI", 9, FontStyle.Bold), ForeColor = TemaUI.TextoOscuro };
+            txtDocumento = new TextBox { Location = new Point(15, 32), Size = new Size(130, 25) };
 
-            var lblNom = new Label { Text = "Nombre Completo:", Location = new Point(155, 28), AutoSize = true, Font = new Font("Segoe UI", 9) };
-            txtNombre = new TextBox { Location = new Point(155, 50), Size = new Size(240, 25), Font = new Font("Segoe UI", 9) };
+            var lblNom = new Label { Text = "Nombre Completo:", Location = new Point(160, 12), AutoSize = true, Font = new Font("Segoe UI", 9, FontStyle.Bold), ForeColor = TemaUI.TextoOscuro };
+            txtNombre = new TextBox { Location = new Point(160, 32), Size = new Size(260, 25) };
 
-            var lblTel = new Label { Text = "Teléfono:", Location = new Point(405, 28), AutoSize = true, Font = new Font("Segoe UI", 9) };
-            txtTelefono = new TextBox { Location = new Point(405, 50), Size = new Size(130, 25), Font = new Font("Segoe UI", 9) };
+            var lblTel = new Label { Text = "Teléfono:", Location = new Point(435, 12), AutoSize = true, Font = new Font("Segoe UI", 9, FontStyle.Bold), ForeColor = TemaUI.TextoOscuro };
+            txtTelefono = new TextBox { Location = new Point(435, 32), Size = new Size(140, 25) };
 
-            var lblEmail = new Label { Text = "Email:", Location = new Point(545, 28), AutoSize = true, Font = new Font("Segoe UI", 9) };
-            txtEmail = new TextBox { Location = new Point(545, 50), Size = new Size(160, 25), Font = new Font("Segoe UI", 9) };
+            var lblEmail = new Label { Text = "Email:", Location = new Point(590, 12), AutoSize = true, Font = new Font("Segoe UI", 9, FontStyle.Bold), ForeColor = TemaUI.TextoOscuro };
+            txtEmail = new TextBox { Location = new Point(590, 32), Size = new Size(150, 25) };
 
-            var lblDir = new Label { Text = "Dirección:", Location = new Point(15, 83), AutoSize = true, Font = new Font("Segoe UI", 9) };
-            txtDireccion = new TextBox { Location = new Point(15, 105), Size = new Size(320, 25), Font = new Font("Segoe UI", 9) };
+            var lblDir = new Label { Text = "Dirección:", Location = new Point(15, 68), AutoSize = true, Font = new Font("Segoe UI", 9, FontStyle.Bold), ForeColor = TemaUI.TextoOscuro };
+            txtDireccion = new TextBox { Location = new Point(15, 88), Size = new Size(405, 25) };
 
             btnNuevo = new Button
             {
-                Text = "Nuevo",
-                Location = new Point(360, 102),
-                Size = new Size(95, 32),
-                BackColor = Color.FromArgb(100, 116, 139),
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 9, FontStyle.Bold),
-                Cursor = Cursors.Hand
+                Text = "Limpiar",
+                Location = new Point(435, 85),
+                Size = new Size(95, 30)
             };
+            TemaUI.AplicarBotonSecundario(btnNuevo, new Font("Segoe UI", 9, FontStyle.Bold));
             btnNuevo.Click += (s, e) => LimpiarFormulario();
 
             btnGuardar = new Button
             {
-                Text = " Guardar",
-                Location = new Point(470, 102),
-                Size = new Size(110, 32),
-                BackColor = Color.FromArgb(16, 185, 129),
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 9, FontStyle.Bold),
-                Cursor = Cursors.Hand
+                Text = "Guardar",
+                Location = new Point(540, 85),
+                Size = new Size(100, 30)
             };
+            TemaUI.AplicarBotonAzul(btnGuardar, new Font("Segoe UI", 9, FontStyle.Bold));
             btnGuardar.Click += BtnGuardar_Click;
 
             btnEliminar = new Button
             {
-                Text = " Eliminar",
-                Location = new Point(595, 102),
-                Size = new Size(110, 32),
-                BackColor = Color.FromArgb(239, 68, 68),
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 9, FontStyle.Bold),
-                Cursor = Cursors.Hand
+                Text = "Eliminar",
+                Location = new Point(650, 85),
+                Size = new Size(90, 30)
             };
+            TemaUI.AplicarBotonSecundario(btnEliminar, new Font("Segoe UI", 9, FontStyle.Bold));
             btnEliminar.Click += BtnEliminar_Click;
 
-            grpDatos.Controls.Add(lblDoc);
-            grpDatos.Controls.Add(txtDocumento);
-            grpDatos.Controls.Add(lblNom);
-            grpDatos.Controls.Add(txtNombre);
-            grpDatos.Controls.Add(lblTel);
-            grpDatos.Controls.Add(txtTelefono);
-            grpDatos.Controls.Add(lblEmail);
-            grpDatos.Controls.Add(txtEmail);
-            grpDatos.Controls.Add(lblDir);
-            grpDatos.Controls.Add(txtDireccion);
-            grpDatos.Controls.Add(btnNuevo);
-            grpDatos.Controls.Add(btnGuardar);
-            grpDatos.Controls.Add(btnEliminar);
+            pnlForm.Controls.Add(lblDoc);
+            pnlForm.Controls.Add(txtDocumento);
+            pnlForm.Controls.Add(lblNom);
+            pnlForm.Controls.Add(txtNombre);
+            pnlForm.Controls.Add(lblTel);
+            pnlForm.Controls.Add(txtTelefono);
+            pnlForm.Controls.Add(lblEmail);
+            pnlForm.Controls.Add(txtEmail);
+            pnlForm.Controls.Add(lblDir);
+            pnlForm.Controls.Add(txtDireccion);
+            pnlForm.Controls.Add(btnNuevo);
+            pnlForm.Controls.Add(btnGuardar);
+            pnlForm.Controls.Add(btnEliminar);
 
             dgvClientes = new DataGridView
             {
-                Location = new Point(20, 215),
-                Size = new Size(720, 310),
-                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
-                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
-                MultiSelect = false,
-                ReadOnly = true,
-                BackgroundColor = Color.White,
-                BorderStyle = BorderStyle.Fixed3D
+                Location = new Point(20, 225),
+                Size = new Size(760, 320),
+                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right
             };
+            TemaUI.AplicarEstiloGrid(dgvClientes);
             dgvClientes.CellClick += DgvClientes_CellClick;
 
-            this.Controls.Add(lblTitulo);
-            this.Controls.Add(grpDatos);
+            this.Controls.Add(pnlHeader);
+            this.Controls.Add(pnlForm);
             this.Controls.Add(dgvClientes);
         }
 
@@ -141,15 +144,22 @@ namespace PuntoDeVenta.Presentacion
             try
             {
                 var lista = _repo.ObtenerTodos();
+                dgvClientes.DataSource = null;
                 dgvClientes.DataSource = lista;
                 if (dgvClientes.Columns["IdCliente"] != null)
                     dgvClientes.Columns["IdCliente"]!.Visible = false;
                 if (dgvClientes.Columns["Activo"] != null)
                     dgvClientes.Columns["Activo"]!.Visible = false;
+
+                if (dgvClientes.Columns["Documento"] != null) dgvClientes.Columns["Documento"]!.HeaderText = "Documento";
+                if (dgvClientes.Columns["Nombre"] != null) dgvClientes.Columns["Nombre"]!.HeaderText = "Nombre";
+                if (dgvClientes.Columns["Telefono"] != null) dgvClientes.Columns["Telefono"]!.HeaderText = "Teléfono";
+                if (dgvClientes.Columns["Email"] != null) dgvClientes.Columns["Email"]!.HeaderText = "Email";
+                if (dgvClientes.Columns["Direccion"] != null) dgvClientes.Columns["Direccion"]!.HeaderText = "Dirección";
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error al cargar los clientes desde la base de datos:\n{ex.Message}", "Base de Datos", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Error al cargar los clientes:\n{ex.Message}", "Base de Datos", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -174,6 +184,7 @@ namespace PuntoDeVenta.Presentacion
             if (string.IsNullOrWhiteSpace(txtNombre.Text))
             {
                 MessageBox.Show("El nombre del cliente es obligatorio.", "Validación", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                txtNombre.Focus();
                 return;
             }
 
@@ -204,7 +215,7 @@ namespace PuntoDeVenta.Presentacion
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error al guardar cliente: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Error al guardar cliente:\n{ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -222,13 +233,13 @@ namespace PuntoDeVenta.Presentacion
                 try
                 {
                     _repo.Eliminar(_idSeleccionado);
-                    MessageBox.Show("Cliente dado de baja.");
+                    MessageBox.Show("Cliente dado de baja.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     LimpiarFormulario();
                     CargarClientes();
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Error al dar de baja: {ex.Message}");
+                    MessageBox.Show($"Error al dar de baja:\n{ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
         }
