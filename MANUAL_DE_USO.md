@@ -3,7 +3,7 @@
 ## 1. Perfiles y Roles de Usuario
 
 | Rol | Usuario | Contraseña | Alcance Operativo |
-| **Administrador** | `admin` | `admin123` | **Acceso total:** Crear, editar y eliminar productos; administrar precios, descripción y stock; abrir y cerrar caja; registrar clientes; consultar reportes y métricas KPI. |
+| **Administrador** | `admin` | `admin123` | **Acceso total:** Crear, editar y eliminar productos; administrar precios, descripción y stock; abrir y cerrar caja; registrar clientes; |
 | **Cajero** | `cajero` | `cajero123` | **Acceso operativo:** Apertura y cierre de turno de caja, cobro de productos, emisión de tickets y consulta de catálogo/precios en modo lectura. |
 
 ### Matriz de Privilegios
