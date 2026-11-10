@@ -18,7 +18,7 @@ namespace PuntoDeVenta
             catch (Exception ex)
             {
                 File.WriteAllText("crash.log", ex.ToString());
-                MessageBox.Show(ex.ToString(), "Error Fatal", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(ex.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
     }

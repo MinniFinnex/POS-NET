@@ -5,9 +5,9 @@ namespace PuntoDeVenta.Utilidades
 {
     public static class TemaUI
     {
-        public static readonly Color AzulMarino = Color.FromArgb(15, 23, 42);      // #0F172A
-        public static readonly Color AzulMarinoHover = Color.FromArgb(30, 41, 59); // #1E293B
-        public static readonly Color AzulMarinoDown = Color.FromArgb(10, 15, 30);  // #0A0F1E
+        public static readonly Color AzulMarino = Color.FromArgb(15, 23, 42);     
+        public static readonly Color AzulMarinoHover = Color.FromArgb(30, 41, 59);
+        public static readonly Color AzulMarinoDown = Color.FromArgb(10, 15, 30);  
 
         public static readonly Color FondoClaro = Color.FromArgb(248, 250, 252);
         public static readonly Color Blanco = Color.White;

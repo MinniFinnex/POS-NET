@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <configuration>
   <connectionStrings>
-    <!-- Configuración para SQL Server LocalDB -->
     <add name="PuntoDeVentaDB"
          connectionString="Server=(localdb)\MSSQLLocalDB;Database=PuntoDeVentaDB;Trusted_Connection=True;TrustServerCertificate=True;"
          providerName="Microsoft.Data.SqlClient" />
