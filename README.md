@@ -1,7 +1,6 @@
 # Sistema de Punto de Venta (POS)
 
-Sistema de punto de venta de escritorio desarrollado en **C#**, **Windows Forms (.NET 9)** y **SQL Server**. Diseñado con arquitectura por capas (N-Tier), control transaccional de inventario, seguridad mediante contraseñas con hash SHA-256 y control de acceso basado en roles (RBAC).
-
+Sistema de punto de venta de escritorio desarrollado en **C#**, **Windows Forms (.NET 9)** y **SQL Server**.
 # Nombres de los integrantes del equipo de cátedra
  ```
  Juan Josué Irias Roque #260708
