@@ -49,33 +49,14 @@ El POS permite al negocio:
 - [x] Cobro en efectivo con cálculo dinámico de cambio y validación de importe suficiente.
 - [x] Generación y visualización de comprobante digital / ticket.
 
-### Cálculo de totales e impuestos
-Fórmula centralizada en `VentaServicio`:
-```text
-Subtotal  = Σ (Cantidad × PrecioUnitario)
-Descuento = $0.00 (precios netos al público)
-Impuesto  = $0.00 (precios con IVA incluido; tasa 13% referencial en Constantes)
-Total     = Subtotal
-Redondeo  = 2 decimales exactos (tipo decimal de C# y decimal(12,2) en SQL Server)
-```
 
-### Consultas multi-tabla y analítica
+### Consultas extra de POS
 - [x] Historial de ventas con filtros de fecha (Hoy, 7 Días, Mes o rango libre) y cajero.
 - [x] Detalle de venta cruzando cabecera, líneas, producto y categoría con `Include`.
 - [x] Métricas analíticas KPI: Total ventas, número de transacciones, ticket promedio y artículos vendidos.
 - [x] Top 5 productos más vendidos calculados mediante agregaciones LINQ / EF Core.
 
----
-
-### UI
-
-**La interfaz gráfica se mantiene 100% idéntica:**
-- Distribución de formularios, tamaños, fuentes y paleta corporativa Azul Marino (`TemaUI`, `#0F172A`).
-- Controles (`DataGridView`, `TextBox`, `Button`, `ComboBox`, `Label`) y orden de tabulación.
-- Flujos de interacción: foco automático en código de barras, atajos de teclado y diálogos de confirmación.
-
-**Mapeo de la UI existente:**
-
+**Mapeo de la UI:**
 | Formulario | Ubicación | Responsabilidad |
 |---|---|---|
 | `frmLogin.cs` | `Presentacion/frmLogin.cs` | Autenticación y acceso por rol |
