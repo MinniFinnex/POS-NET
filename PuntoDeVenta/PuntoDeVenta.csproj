@@ -10,7 +10,15 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Data.SqlClient" Version="7.1.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.2" />
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="10.0.14" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="PuntoDeVenta.Modelos" />
+    <Using Include="PuntoDeVenta.DTOs" />
+    <Using Include="PuntoDeVenta.Comun" />
+    <Using Include="PuntoDeVenta.Comun.Excepciones" />
   </ItemGroup>
 
 </Project>

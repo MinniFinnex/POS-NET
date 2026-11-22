@@ -1,5 +1,5 @@
-using PuntoDeVenta.Datos;
-using PuntoDeVenta.Entidades;
+using PuntoDeVenta.Servicios;
+using PuntoDeVenta.Modelos;
 using PuntoDeVenta.Utilidades;
 using System;
 using System.Drawing;
@@ -20,7 +20,7 @@ namespace PuntoDeVenta.Presentacion
         private Button btnNuevo = null!;
         private int _idSeleccionado = 0;
 
-        private readonly ClienteRepository _repo = new();
+        private readonly ClienteServicio _servicio = new();
 
         public frmClientes()
         {
@@ -143,7 +143,7 @@ namespace PuntoDeVenta.Presentacion
         {
             try
             {
-                var lista = _repo.ObtenerTodos();
+                var lista = _servicio.ListarClientes();
                 dgvClientes.DataSource = null;
                 dgvClientes.DataSource = lista;
                 if (dgvClientes.Columns["IdCliente"] != null)
@@ -200,18 +200,17 @@ namespace PuntoDeVenta.Presentacion
 
             try
             {
-                if (_idSeleccionado == 0)
+                var resultado = _servicio.Guardar(cliente);
+                if (resultado.Exito)
                 {
-                    _repo.Insertar(cliente);
-                    MessageBox.Show("Cliente registrado exitosamente.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show(resultado.Mensaje, "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    LimpiarFormulario();
+                    CargarClientes();
                 }
                 else
                 {
-                    _repo.Actualizar(cliente);
-                    MessageBox.Show("Cliente actualizado exitosamente.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show(resultado.Mensaje, "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
-                LimpiarFormulario();
-                CargarClientes();
             }
             catch (Exception ex)
             {
@@ -232,10 +231,17 @@ namespace PuntoDeVenta.Presentacion
             {
                 try
                 {
-                    _repo.Eliminar(_idSeleccionado);
-                    MessageBox.Show("Cliente dado de baja.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    LimpiarFormulario();
-                    CargarClientes();
+                    var resultado = _servicio.Eliminar(_idSeleccionado);
+                    if (resultado.Exito)
+                    {
+                        MessageBox.Show("Cliente dado de baja.", "Éxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        LimpiarFormulario();
+                        CargarClientes();
+                    }
+                    else
+                    {
+                        MessageBox.Show(resultado.Mensaje, "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    }
                 }
                 catch (Exception ex)
                 {

@@ -1,4 +1,4 @@
-using PuntoDeVenta.Entidades;
+using PuntoDeVenta.Modelos;
 using PuntoDeVenta.Negocio;
 using PuntoDeVenta.Utilidades;
 using System;

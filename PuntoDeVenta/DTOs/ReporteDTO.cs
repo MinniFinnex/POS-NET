@@ -1,9 +1,10 @@
 using System;
 
-namespace PuntoDeVenta.Entidades
+namespace PuntoDeVenta.DTOs
 {
     public class ProductoVendidoDTO
     {
+        public int IdProducto { get; set; }
         public string Codigo { get; set; } = string.Empty;
         public string Nombre { get; set; } = string.Empty;
         public int CantidadVendida { get; set; }

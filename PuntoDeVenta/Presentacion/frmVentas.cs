@@ -1,5 +1,5 @@
-using PuntoDeVenta.Datos;
-using PuntoDeVenta.Entidades;
+using PuntoDeVenta.Servicios;
+using PuntoDeVenta.Modelos;
 using PuntoDeVenta.Negocio;
 using PuntoDeVenta.Utilidades;
 using System;
@@ -15,7 +15,7 @@ namespace PuntoDeVenta.Presentacion
         private readonly Usuario _usuario;
         private readonly ProductoService _productoService = new();
         private readonly VentaService _ventaService = new();
-        private readonly ClienteRepository _clienteRepo = new();
+        private readonly ClienteServicio _clienteService = new();
         private readonly CajaService _cajaService = new();
 
         private Label lblEstadoCaja = null!;
@@ -515,7 +515,7 @@ namespace PuntoDeVenta.Presentacion
         {
             try
             {
-                var clientes = _clienteRepo.ObtenerTodos();
+                var clientes = _clienteService.ListarClientes();
                 if (clientes.Count > 0)
                 {
                     cboClientes.DataSource = clientes;

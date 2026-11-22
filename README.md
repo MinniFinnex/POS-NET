@@ -1,10 +1,8 @@
-# 🛒 Sistema POS (Punto de Venta) en C# + WinForms + SQL Server
+# Sistema de Punto de Venta (POS)
 
-Sistema de punto de venta de escritorio desarrollado con **C#**, **Windows Forms (.NET 9)** y **SQL Server**. Diseñado con una arquitectura desacoplada por capas (N-Tier), con control transaccional de inventario, control de acceso basado en roles (RBAC), control integral de turnos de caja y módulo de reportes analíticos.
+> Sistema POS de escritorio para gestionar productos, inventario, clientes, turnos de caja y ventas, con consultas multi-tabla y persistencia mediante **Entity Framework Core**.
 
----
-
-## 👥 Integrantes del Equipo de Cátedra
+## Integrantes del Equipo de Cátedra
 
 ```text
 Juan Josué Irias Roque #260708
@@ -13,145 +11,200 @@ Orlando Josué Benitez Cortez #260534
 Christopher Henry Godoy Orellana #260588
 ```
 
----
+### ¿Qué hace el sistema?
 
-## 📑 Tabla de contenido
-
-1. [✨ Características Principales](#-características-principales)
-2. [👥 Integrantes del Equipo de Cátedra](#-integrantes-del-equipo-de-cátedra)
-3. [🔐 Roles del Sistema y Credenciales](#-roles-del-sistema-y-credenciales)
-4. [🏗️ Arquitectura del Software](#️-arquitectura-del-software)
-5. [🗄️ Modelo de Base de Datos](#️-modelo-de-base-de-datos)
-6. [⚙️ Requisitos e Instalación](#️-requisitos-e-instalación)
-7. [🚀 Cómo Ejecutar la Aplicación](#-cómo-ejecutar-la-aplicación)
-8. [💻 Código y Seguridad](#-código-y-seguridad)
-9. [📖 Manual de Uso](#-manual-de-uso)
-10. [🐙 Publicar en GitHub](#-publicar-en-github)
-11. [📄 Licencia](#-licencia)
+El POS permite al negocio:
+- Administrar el **catálogo de productos**, categorías y control estricto de **inventario** con alertas de stock mínimo.
+- Gestionar **clientes** y asociar compras por documento/nombre o venta predeterminada a *Consumidor Final*.
+- Controlar **turnos de caja** obligatorios (apertura, registro de fondo inicial, arqueo en tiempo real y cierre con cálculo de diferencias).
+- Registrar **ventas** (cabecera + detalle) mediante transacciones atómicas con descuento automático de stock y cálculo de cambio.
+- Consultar **historial de ventas, reportes analíticos y KPIs** cruzando múltiples tablas con carga optimizada.
 
 ---
 
-## ✨ Características Principales
+### Gestión de productos / inventario
+- [x] Alta, edición, consulta y **baja lógica** (mediante el atributo `Activo = 0`).
+- [x] Asociación producto $\leftrightarrow$ categoría (`IdCategoria` FK).
+- [x] Control de existencias: descuento atómico al vender e impedimento de ventas sin existencias suficientes.
+- [x] Alertas visuales de stock mínimo (`Stock <= StockMinimo`).
+- [x] Búsqueda interactiva por código (con tecla Enter) y filtrado de catálogo.
+- **Validaciones activas:** Código obligatorio y único; Nombre obligatorio; Categoría obligatoria; Precios $\ge 0$; Stock $\ge 0$; Stock Mínimo $\ge 0$.
 
-- 🔐 **Autenticación y Roles (RBAC):** Validación de credenciales de usuario y adaptación dinámica de permisos según el perfil del usuario (Administrador / Cajero).
-- 💵 **Control Integral de Caja:** Turnos de caja obligatorios para ventas, captura de fondo inicial, arqueo en tiempo real (monto esperado vs. monto contado) y cálculo automático de diferencias (exacto, sobrante o faltante).
-- 🧾 **Módulo de Ventas / Carrito:** Carrito reactivo con lector de código de barras (tecla Enter), acumulación inteligente de existencias, atajos rápidos (+1, -1, quitar, vaciar) y cálculo de cambio.
-- 📦 **Control de Inventario Transaccional:** Descuento atómico de existencias mediante transacciones SQL (`SqlTransaction`), soporte para descripción detallada de productos y prevención de ventas sin existencias suficientes.
-- 📊 **Historial y Reportes de Ventas:** Visualización de métricas clave (Total ventas, número de transacciones, ticket promedio, artículos vendidos), filtros por fecha (Hoy, 7 Días, Mes) y consulta/reimpresión de tickets.
-- 👥 **Gestión de Clientes:** Directorio de clientes para asociar compras por documento/nombre o venta predeterminada a Consumidor Final.
-- 🎨 **Diseño Moderno y Unificado (TemaUI):** Interfaz corporativa limpia y profesional con paleta en tonos Azul Marino (#0F172A).
+### Clientes y usuarios
+- [x] CRUD de clientes (Documento, Nombre, Teléfono, Email, Dirección).
+- [x] Cliente predeterminado *"Consumidor Final"* (Documento `00000000`).
+- [x] Autenticación y control de acceso basado en roles (RBAC):
+  - **Administrador (`admin` / `admin123`):** Acceso total a mantenimiento de productos, precios, reportes, turnos y ventas.
+  - **Cajero (`cajero` / `cajero123`):** Acceso operativo a ventas, apertura/cierre de turno y consultas en modo lectura.
+
+### Control de turnos de caja
+- [x] Apertura obligatoria de turno con fondo inicial para habilitar el módulo de cobro.
+- [x] Seguimiento continuo de ventas acumuladas por turno en tiempo real.
+- [x] Cierre de turno con arqueo físico (monto esperado vs. monto contado) y cálculo de diferencia (exacto, sobrante o faltante).
+- [x] Historial de turnos con observaciones y estados (`ABIERTA`, `CERRADA`).
+
+### Registro de ventas y transacciones
+- [x] Carrito reactivo con lector de código de barras, atajos `+1`, `-1`, `Quitar` y `Vaciar`.
+- [x] Identificador único de transacción autoincremental (`IdVenta` en SQL Server).
+- [x] Cobro en efectivo con cálculo dinámico de cambio y validación de importe suficiente.
+- [x] Generación y visualización de comprobante digital / ticket.
+
+### Cálculo de totales e impuestos
+Fórmula centralizada en `VentaServicio`:
+```text
+Subtotal  = Σ (Cantidad × PrecioUnitario)
+Descuento = $0.00 (precios netos al público)
+Impuesto  = $0.00 (precios con IVA incluido; tasa 13% referencial en Constantes)
+Total     = Subtotal
+Redondeo  = 2 decimales exactos (tipo decimal de C# y decimal(12,2) en SQL Server)
+```
+
+### Consultas multi-tabla y analítica
+- [x] Historial de ventas con filtros de fecha (Hoy, 7 Días, Mes o rango libre) y cajero.
+- [x] Detalle de venta cruzando cabecera, líneas, producto y categoría con `Include`.
+- [x] Métricas analíticas KPI: Total ventas, número de transacciones, ticket promedio y artículos vendidos.
+- [x] Top 5 productos más vendidos calculados mediante agregaciones LINQ / EF Core.
 
 ---
 
-## 🔐 Roles del Sistema y Credenciales
+### UI
 
-El sistema cuenta con dos perfiles de usuario preconfigurados con diferentes privilegios de acceso:
+**La interfaz gráfica se mantiene 100% idéntica:**
+- Distribución de formularios, tamaños, fuentes y paleta corporativa Azul Marino (`TemaUI`, `#0F172A`).
+- Controles (`DataGridView`, `TextBox`, `Button`, `ComboBox`, `Label`) y orden de tabulación.
+- Flujos de interacción: foco automático en código de barras, atajos de teclado y diálogos de confirmación.
 
-| Rol | Usuario | Contraseña | Permisos y Alcance |
-| :--- | :--- | :--- | :--- |
-| **Administrador** | `admin` | `admin123` | **Acceso total:** Crear, editar y eliminar productos; administrar precios, descripción y stock; abrir y cerrar turnos de caja; registrar clientes; realizar ventas; consultar reportes analíticos y KPIs. |
-| **Cajero** | `cajero` | `cajero123` | **Acceso operativo:** Apertura y cierre de turnos de caja, cobro de ventas, selección de clientes, reimpresión de tickets y consulta de catálogo/precios en modo lectura (edición y eliminación bloqueadas). |
+**Mapeo de la UI existente:**
 
-### Matriz de Permisos por Módulo
+| Formulario | Ubicación | Responsabilidad |
+|---|---|---|
+| `frmLogin.cs` | `Presentacion/frmLogin.cs` | Autenticación y acceso por rol |
+| `frmPrincipal.cs` | `Presentacion/frmPrincipal.cs` | Ventana maestra y navegación RBAC |
+| `frmVentas.cs` | `Presentacion/frmVentas.cs` | Carrito de venta, validación de turno y cobro |
+| `frmProductos.cs` | `Presentacion/frmProductos.cs` | Mantenimiento de catálogo y existencias |
+| `frmClientes.cs` | `Presentacion/frmClientes.cs` | Directorio y mantenimiento de clientes |
+| `frmCaja.cs` | `Presentacion/frmCaja.cs` | Turnos de caja, fondo inicial, arqueo y cierre |
+| `frmReportes.cs` | `Presentacion/frmReportes.cs` | KPIs analíticos, historial y reimpresión |
 
-| Módulo / Acción | Administrador | Cajero |
-| :--- | :---: | :---: |
-| Iniciar Sesión | ✅ | ✅ |
-| Apertura y Cierre de Caja | ✅ | ✅ |
-| Registrar y Cobrar Ventas | ✅ | ✅ |
-| Consultar Productos y Precios | ✅ | ✅ |
-| Agregar Nuevos Productos | ✅ | ❌ *(Solo lectura)* |
-| Modificar Precios, Descripción y Stock | ✅ | ❌ *(Solo lectura)* |
-| Eliminar Productos | ✅ | ❌ *(Solo lectura)* |
-| Administrar Directorio de Clientes | ✅ | ✅ |
-| Consultar Historial y Reportes | ✅ | ✅ |
 
-> [!NOTE]
-> Las credenciales de acceso por defecto son: **Administrador** (`admin` / `admin123`) y **Cajero** (`cajero` / `cajero123`).
-
----
-
-## 🏗️ Arquitectura del Software
-
-El proyecto sigue una arquitectura desacoplada por capas (**N-Tier Architecture**) que separa la interfaz visual de las reglas de negocio y el acceso a datos:
+## Estructura de carpetas y dependencias
 
 ```text
 PuntoDeVenta/
-│
 ├── PuntoDeVenta.sln                  # Solución de Visual Studio
-├── README.md                         # Documentación oficial del sistema
-├── MANUAL_DE_USO.md                  # Manual de usuario y flujo operativo
-├── LICENSE                           # Licencia de software MIT
-├── .gitignore                        # Reglas de exclusión de Git
+├── README.md                         # Documentación oficial y guía de arquitectura
+├── MANUAL_DE_USO.md                  # Manual operativo paso a paso
+├── LICENSE                           # Licencia MIT
 │
-├── Database/                         # Scripts de base de datos SQL Server
-│   └── PuntoDeVentaDB.sql            # Script unificado: Creación de BD, tablas, claves foráneas y datos iniciales
+├── docs/                             # Documentación de paridad y calidad
+│   ├── casos-de-prueba.md            # Casos de prueba y validación sin regresiones
+│   └── capturas-ui-referencia/       # Referencia de las 7 pantallas del sistema
 │
-└── PuntoDeVenta/                     # Proyecto de aplicación (.NET 9 WinForms)
-    ├── Presentacion/                 # Capa de Interfaz Gráfica (UI)
-    │   ├── frmLogin.cs               # Pantalla de acceso y autenticación
-    │   ├── frmPrincipal.cs           # Ventana maestra con menú lateral y control por rol
-    │   ├── frmVentas.cs              # Interfaz de cobro, carrito y control de turno
-    │   ├── frmProductos.cs           # Catálogo, mantenimiento y descripción de productos
-    │   ├── frmClientes.cs            # Directorio y mantenimiento de clientes
-    │   ├── frmCaja.cs                # Turnos, apertura, arqueo y cierre de caja
-    │   └── frmReportes.cs            # Historial de ventas, métricas KPI y copia de comprobantes
+├── Database/                         # Base de datos SQL Server / LocalDB
+│   ├── PuntoDeVentaDB.mdf            # Archivo de base de datos primaria
+│   ├── PuntoDeVentaDB_log.ldf        # Archivo de registro de transacciones
+│   ├── PuntoDeVentaDB.sql            # Script unificado (BD, tablas, relaciones, semillas)
+│   └── scripts/
+│       ├── 01_esquema.sql            # Definición DDL (8 tablas, PK, FK, constraints)
+│       ├── 02_datos_semilla.sql      # Datos iniciales (roles, usuarios, productos, cliente)
+│       └── 03_vistas_consultas.sql   # Vistas analíticas multi-tabla para reportes
+│
+└── PuntoDeVenta/                     # Proyecto principal (.NET 9 WinForms)
+    ├── Program.cs                    # Punto de entrada de la aplicación
+    ├── App.config                    # Cadenas de conexión (PuntoDeVentaConn / PuntoDeVentaDB)
+    ├── PuntoDeVenta.csproj           # Configuración del proyecto y paquetes NuGet
     │
-    ├── Negocio/                      # Capa de Lógica de Negocio (BLL)
-    │   ├── VentaService.cs           # Reglas de venta, resumen analítico y Top productos
-    │   ├── ProductoService.cs        # Reglas de validación de productos y stock
-    │   ├── UsuarioService.cs         # Lógica de autenticación y verificación de contraseñas
-    │   └── CajaService.cs            # Gestión de turnos, apertura, validación y arqueo
+    ├── Presentacion/                 # Capa de Interfaz de Usuario (UI)
+    │   ├── frmLogin.cs
+    │   ├── frmPrincipal.cs
+    │   ├── frmVentas.cs
+    │   ├── frmProductos.cs
+    │   ├── frmClientes.cs
+    │   ├── frmCaja.cs
+    │   └── frmReportes.cs
     │
-    ├── Datos/                        # Capa de Acceso a Datos (DAL con ADO.NET)
-    │   ├── Conexion.cs               # Manejo centralizado de SqlConnection
-    │   ├── VentaRepository.cs        # Registro transaccional cabecera-detalle en BD
-    │   ├── ProductoRepository.cs     # Operaciones CRUD en tabla Productos
-    │   ├── ClienteRepository.cs      # Operaciones CRUD en tabla Clientes
-    │   ├── UsuarioRepository.cs      # Consultas y validación de credenciales
-    │   └── CajaRepository.cs         # Consultas y transacciones de caja y turnos
-    │
-    ├── Entidades/                    # Modelos de Datos (DTOs / POCOs)
+    ├── Modelos/                      # Entidades del Dominio (Mapeo EF Core)
+    │   ├── PosContext.cs             # Contexto DbContext central de Entity Framework Core
+    │   ├── Rol.cs
+    │   ├── Usuario.cs
+    │   ├── Categoria.cs
     │   ├── Producto.cs
     │   ├── Cliente.cs
-    │   ├── Venta.cs
-    │   ├── DetalleVenta.cs
     │   ├── Caja.cs
-    │   ├── ReporteDTO.cs
-    │   └── Usuario.cs
+    │   ├── Venta.cs
+    │   └── DetalleVenta.cs
     │
-    ├── Utilidades/                   # Utilidades del sistema
-    │   ├── Seguridad.cs              # Utilitarios de validación y seguridad
-    │   └── TemaUI.cs                 # Paleta corporativa Azul Marino y estilos compartidos
+    ├── Datos/                        # Capa de Acceso a Datos (DAL)
+    │   ├── PosContext.cs             # Especialización / alias de acceso a datos
+    │   ├── UnidadDeTrabajo.cs        # Coordinador de transacciones y repositorios
+    │   └── Repositorios/             # Repositorios tipados
+    │       ├── IRepositorio.cs       # Contrato genérico CRUD
+    │       ├── ProductoRepositorio.cs
+    │       ├── ClienteRepositorio.cs
+    │       ├── VentaRepositorio.cs   # Transacciones multi-tabla y consultas con Include
+    │       ├── CajaRepositorio.cs
+    │       └── UsuarioRepositorio.cs
     │
-    ├── App.config                    # Cadena de conexión activa a SQL Server
-    ├── App.config.example            # Plantilla de configuración de conexiones
-    └── Program.cs                    # Punto de entrada de la aplicación
+    ├── Servicios/                    # Capa de Lógica de Negocio (BLL)
+    │   ├── ProductoServicio.cs
+    │   ├── ClienteServicio.cs
+    │   ├── VentaServicio.cs          # Procesamiento de venta, validación y totales
+    │   ├── InventarioServicio.cs     # Verificación de stock y alertas
+    │   ├── CajaServicio.cs           # Apertura, arqueo y cierre de turnos
+    │   └── UsuarioServicio.cs        # Autenticación y roles
+    │
+    ├── DTOs/                         # Data Transfer Objects
+    │   ├── VentaResumenDto.cs        # Proyección optimizada para historial
+    │   ├── LineaVentaDto.cs          # Proyección de líneas del carrito
+    │   └── ReporteDTO.cs             # DTOs para métricas KPI y top productos
+    │
+    ├── Validaciones/                 # Reglas comerciales centralizadas
+    │   ├── VentaValidador.cs         # Validaciones de venta, carrito y cajero
+    │   └── ProductoValidador.cs      # Validaciones de catálogo y stock
+    │
+    ├── Comun/                        # Utilidades compartidas y transversales
+    │   ├── Constantes.cs             # Constantes del sistema, roles y estados
+    │   └── Excepciones/              # Excepciones tipadas
+    │       ├── NegocioException.cs   # Reglas de negocio incumplidas
+    │       └── DatosException.cs     # Errores en infraestructura de datos
+    │
+    └── Utilidades/                   # Utilitarios de UI y seguridad
+        ├── TemaUI.cs                 # Paleta corporativa Azul Marino
+        └── Seguridad.cs              # Utilitarios de seguridad
 ```
 
----
+### Reglas de dependencia entre capas
 
-## 🗄️ Modelo de Base de Datos
+```text
+Presentacion  →  Servicios  →  Datos  →  Modelos
+      │                                     ↑
+      └────────────── DTOs ─────────────────┘
+```
+
+- `Presentacion` **solo** conoce `Servicios` y `DTOs`.
+- `Servicios` contiene la lógica comercial, utiliza `Validaciones` y coordina con `Datos`.
+- `Datos` es el **único** componente que interactúa con EF Core y la base de datos.
+- `Modelos` define las entidades del dominio sin depender de capas superiores.
 
 ### Diagrama Entidad-Relación
 
 ```mermaid
 erDiagram
-    ROLES ||--o{ USUARIOS : "asigna rol"
-    CATEGORIAS ||--o{ PRODUCTOS : "clasifica"
-    CLIENTES ||--o{ VENTAS : "realiza compra"
-    USUARIOS ||--o{ VENTAS : "registra venta"
-    USUARIOS ||--o{ CAJAS : "abre turno"
-    CAJAS ||--o{ VENTAS : "vincula turno"
-    VENTAS ||--|{ DETALLE_VENTAS : "contiene items"
-    PRODUCTOS ||--o{ DETALLE_VENTAS : "incluido en"
+    Roles ||--o{ Usuarios : "asigna rol"
+    Categorias ||--o{ Productos : "clasifica"
+    Clientes ||--o{ Ventas : "asocia compra"
+    Usuarios ||--o{ Ventas : "registra venta"
+    Usuarios ||--o{ Cajas : "abre turno"
+    Cajas ||--o{ Ventas : "vincula cobro"
+    Ventas ||--|{ DetalleVentas : "contiene items"
+    Productos ||--o{ DetalleVentas : "incluido en"
 
-    ROLES {
+    Roles {
         int IdRol PK
         string Nombre
     }
 
-    USUARIOS {
+    Usuarios {
         int IdUsuario PK
         string NombreCompleto
         string Usuario
@@ -161,15 +214,15 @@ erDiagram
         datetime FechaCreacion
     }
 
-    CATEGORIAS {
+    Categorias {
         int IdCategoria PK
         string Nombre
         bit Activo
     }
 
-    PRODUCTOS {
+    Productos {
         int IdProducto PK
-        string Codigo
+        string Codigo UK
         string Nombre
         string Descripcion
         int IdCategoria FK
@@ -180,7 +233,7 @@ erDiagram
         bit Activo
     }
 
-    CLIENTES {
+    Clientes {
         int IdCliente PK
         string Documento
         string Nombre
@@ -190,7 +243,7 @@ erDiagram
         bit Activo
     }
 
-    CAJAS {
+    Cajas {
         int IdCaja PK
         int IdUsuario FK
         datetime FechaApertura
@@ -203,7 +256,7 @@ erDiagram
         string Estado
     }
 
-    VENTAS {
+    Ventas {
         int IdVenta PK
         datetime Fecha
         int IdCliente FK
@@ -215,7 +268,7 @@ erDiagram
         string Estado
     }
 
-    DETALLE_VENTAS {
+    DetalleVentas {
         int IdDetalle PK
         int IdVenta FK
         int IdProducto FK
@@ -225,126 +278,23 @@ erDiagram
     }
 ```
 
----
+### Tablas principales
 
-## ⚙️ Requisitos e Instalación
+| Tabla | Propósito | Columnas Clave | Relaciones |
+|---|---|---|---|
+| `Roles` | Perfiles de seguridad | `IdRol` (PK), `Nombre` | 1:N con `Usuarios` |
+| `Usuarios` | Cuentas de cajeros y administradores | `IdUsuario` (PK), `Usuario`, `Password`, `IdRol` (FK) | N:1 con `Roles`, 1:N con `Cajas` y `Ventas` |
+| `Categorias` | Familias de productos | `IdCategoria` (PK), `Nombre`, `Activo` | 1:N con `Productos` |
+| `Productos` | Catálogo e inventario | `IdProducto` (PK), `Codigo`, `Nombre`, `Stock`, `IdCategoria` (FK) | N:1 con `Categorias`, 1:N con `DetalleVentas` |
+| `Clientes` | Directorio de clientes | `IdCliente` (PK), `Documento`, `Nombre` | 1:N con `Ventas` |
+| `Cajas` | Turnos y arqueos de caja | `IdCaja` (PK), `IdUsuario` (FK), `MontoInicial`, `MontoVentas`, `Estado` | N:1 con `Usuarios`, 1:N con `Ventas` |
+| `Ventas` | Cabecera de transacciones | `IdVenta` (PK), `Fecha`, `IdCliente`, `IdUsuario`, `IdCaja`, `Total` | N:1 con `Clientes`, `Usuarios`, `Cajas`; 1:N con `DetalleVentas` |
+| `DetalleVentas` | Líneas de producto vendidas | `IdDetalle` (PK), `IdVenta` (FK), `IdProducto` (FK), `Cantidad`, `Subtotal` | N:1 con `Ventas` y `Productos` |
 
-### Requisitos del Sistema
+
+### Requisitos del sistema
 - **Sistema Operativo:** Windows 10 / Windows 11
-- **SDK:** .NET 9.0 SDK (o superior)
-- **Base de Datos:** SQL Server LocalDB (`(localdb)\MSSQLLocalDB`), SQL Server Express o Developer Edition
-- **IDE:** Visual Studio 2022 o Visual Studio Code con C# DevKit
-
-### Configuración de la Base de Datos
-
-El proyecto cuenta con un script SQL unificado que crea la base de datos `PuntoDeVentaDB`, sus 8 tablas, relaciones y datos iniciales:
-
-1. Inicia la instancia de SQL Server LocalDB en tu terminal PowerShell:
-   ```powershell
-   sqllocaldb start MSSQLLocalDB
-   ```
-2. Ejecuta el script unificado con `sqlcmd`:
-   ```powershell
-   sqlcmd -S "(localdb)\MSSQLLocalDB" -E -i "Database\PuntoDeVentaDB.sql"
-   ```
-   *(También puedes abrir y ejecutar `Database/PuntoDeVentaDB.sql` directamente en SQL Server Management Studio).*
-
-### Cadena de Conexión (`App.config`)
-
-Por defecto, la aplicación apunta a **SQL Server LocalDB**:
-
-```xml
-<configuration>
-  <connectionStrings>
-    <add name="PuntoDeVentaDB"
-         connectionString="Server=(localdb)\MSSQLLocalDB;Database=PuntoDeVentaDB;Trusted_Connection=True;TrustServerCertificate=True;"
-         providerName="Microsoft.Data.SqlClient" />
-  </connectionStrings>
-</configuration>
-```
-
-> [!TIP]
-> Si deseas conectar a una instancia de SQL Server Express instalada localmente, cambia `Server=(localdb)\MSSQLLocalDB;` por `Server=localhost\SQLEXPRESS;`.
-
----
-
-## 🚀 Cómo Ejecutar la Aplicación
-
-### Opción 1: Desde la Terminal (.NET CLI)
-```powershell
-dotnet build
-dotnet run --project PuntoDeVenta/PuntoDeVenta.csproj
-```
-
-### Opción 2: Desde Visual Studio
-1. Abre el archivo de solución `PuntoDeVenta.sln`.
-2. Presiona `F5` o haz clic en el botón de reproducción (Iniciar) en la barra superior.
-
----
-
-## 💻 Código y Seguridad
-
-### Registro Transaccional de Ventas (`VentaRepository.cs`)
-Para garantizar la integridad y consistencia contable, la venta, el descuento atómico de stock y el vínculo con el turno de caja se ejecutan dentro de una única transacción atómica `SqlTransaction`:
-
-```csharp
-using var cn = Conexion.ObtenerConexion();
-cn.Open();
-using var tx = cn.BeginTransaction();
-
-try
-{
-    // 1. Inserción de cabecera de la venta vinculada a la caja activa
-    var cmdVenta = new SqlCommand(@"
-        INSERT INTO Ventas (Fecha, IdCliente, IdUsuario, IdCaja, Subtotal, Impuesto, Total, Estado)
-        VALUES (@Fecha, @IdCliente, @IdUsuario, @IdCaja, @Subtotal, @Impuesto, @Total, @Estado);
-        SELECT SCOPE_IDENTITY();", cn, tx);
-    // ... parámetros ...
-    int idVenta = Convert.ToInt32(cmdVenta.ExecuteScalar());
-
-    // 2. Inserción de líneas y descuento atómico de stock
-    foreach (var d in detalles)
-    {
-        var cmdDet = new SqlCommand(@"
-            INSERT INTO DetalleVentas (IdVenta, IdProducto, Cantidad, PrecioUnitario, Subtotal)
-            VALUES (@IdVenta, @IdProducto, @Cantidad, @PrecioUnitario, @Subtotal);
-
-            UPDATE Productos SET Stock = Stock - @Cantidad
-            WHERE IdProducto = @IdProducto AND Stock >= @Cantidad;", cn, tx);
-        // ... parámetros ...
-        cmdDet.ExecuteNonQuery();
-    }
-
-    tx.Commit();
-    return idVenta;
-}
-catch
-{
-    tx.Rollback();
-    throw;
-}
-```
-
----
-
-## 📖 Manual de Uso
-
-Para consultar el flujo de trabajo operativo paso a paso (apertura de turno, cobro, arqueo de caja y consulta de reportes), revisa el [Manual de Uso](MANUAL_DE_USO.md).
-
----
-
-## 🐙 Publicar en GitHub
-
-Para sincronizar o subir cambios al repositorio remoto:
-
-```powershell
-git add .
-git commit -m "docs: actualizar documentacion con todas las mejoras y roles aplicados"
-git push -u origin main
-```
-
----
-
-## 📄 Licencia
-
-Este proyecto está distribuido bajo la licencia [MIT](LICENSE).
+- **Entorno de desarrollo:** Visual Studio 2022 con la carga de trabajo *Desarrollo de escritorio de .NET* o VS Code con C# DevKit
+- **SDK:** .NET 9.0 SDK
+- **Base de datos:** SQL Server Express LocalDB (`(localdb)\MSSQLLocalDB`), SQL Server Express o Developer Edition
+- 

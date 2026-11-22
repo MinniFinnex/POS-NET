@@ -13,6 +13,7 @@ namespace PuntoDeVenta
             try
             {
                 ApplicationConfiguration.Initialize();
+                PuntoDeVenta.Datos.Conexion.AsegurarEsquema();
                 Application.Run(new frmLogin());
             }
             catch (Exception ex)
