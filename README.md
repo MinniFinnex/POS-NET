@@ -1,6 +1,6 @@
 # 🛒 Sistema POS (Punto de Venta) en C# + WinForms + SQL Server
 
-Sistema de punto de venta de escritorio desarrollado con **C#**, **Windows Forms (.NET 9)** y **SQL Server**. Diseñado con una arquitectura desacoplada por capas (N-Tier), con control transaccional de inventario, seguridad mediante contraseñas con hash SHA-256, control de acceso basado en roles (RBAC), control integral de turnos de caja y módulo de reportes analíticos.
+Sistema de punto de venta de escritorio desarrollado con **C#**, **Windows Forms (.NET 9)** y **SQL Server**. Diseñado con una arquitectura desacoplada por capas (N-Tier), con control transaccional de inventario, control de acceso basado en roles (RBAC), control integral de turnos de caja y módulo de reportes analíticos.
 
 ---
 
@@ -33,7 +33,7 @@ Christopher Henry Godoy Orellana #260588
 
 ## ✨ Características Principales
 
-- 🔐 **Autenticación y Roles (RBAC):** Validación de credenciales cifradas con hash **SHA-256** y adaptación dinámica de permisos según el perfil del usuario (Administrador / Cajero).
+- 🔐 **Autenticación y Roles (RBAC):** Validación de credenciales de usuario y adaptación dinámica de permisos según el perfil del usuario (Administrador / Cajero).
 - 💵 **Control Integral de Caja:** Turnos de caja obligatorios para ventas, captura de fondo inicial, arqueo en tiempo real (monto esperado vs. monto contado) y cálculo automático de diferencias (exacto, sobrante o faltante).
 - 🧾 **Módulo de Ventas / Carrito:** Carrito reactivo con lector de código de barras (tecla Enter), acumulación inteligente de existencias, atajos rápidos (+1, -1, quitar, vaciar) y cálculo de cambio.
 - 📦 **Control de Inventario Transaccional:** Descuento atómico de existencias mediante transacciones SQL (`SqlTransaction`), soporte para descripción detallada de productos y prevención de ventas sin existencias suficientes.
@@ -67,7 +67,7 @@ El sistema cuenta con dos perfiles de usuario preconfigurados con diferentes pri
 | Consultar Historial y Reportes | ✅ | ✅ |
 
 > [!NOTE]
-> Las contraseñas se almacenan en la tabla `Usuarios` con hash **SHA-256** en formato hexadecimal. Nunca se almacenan contraseñas en texto plano.
+> Las credenciales de acceso por defecto son: **Administrador** (`admin` / `admin123`) y **Cajero** (`cajero` / `cajero123`).
 
 ---
 
@@ -121,7 +121,7 @@ PuntoDeVenta/
     │   └── Usuario.cs
     │
     ├── Utilidades/                   # Utilidades del sistema
-    │   ├── Seguridad.cs              # Generación y verificación de hash SHA-256
+    │   ├── Seguridad.cs              # Utilitarios de validación y seguridad
     │   └── TemaUI.cs                 # Paleta corporativa Azul Marino y estilos compartidos
     │
     ├── App.config                    # Cadena de conexión activa a SQL Server
@@ -155,7 +155,7 @@ erDiagram
         int IdUsuario PK
         string NombreCompleto
         string Usuario
-        string PasswordHash
+        string Password
         int IdRol FK
         bit Activo
         datetime FechaCreacion

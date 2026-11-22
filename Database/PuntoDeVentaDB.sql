@@ -33,11 +33,18 @@ BEGIN
         IdUsuario       INT IDENTITY(1,1) PRIMARY KEY,
         NombreCompleto  NVARCHAR(100) NOT NULL,
         Usuario         NVARCHAR(50)  NOT NULL UNIQUE,
-        PasswordHash    NVARCHAR(256) NOT NULL,
+        Password        NVARCHAR(100) NOT NULL,
         IdRol           INT NOT NULL REFERENCES Roles(IdRol),
         Activo          BIT NOT NULL DEFAULT 1,
         FechaCreacion   DATETIME NOT NULL DEFAULT GETDATE()
     );
+END
+ELSE IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Usuarios') AND name = 'Password')
+BEGIN
+    IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Usuarios') AND name = 'PasswordHash')
+        EXEC sp_rename 'Usuarios.PasswordHash', 'Password', 'COLUMN';
+    ELSE
+        ALTER TABLE Usuarios ADD Password NVARCHAR(100) NOT NULL DEFAULT 'admin123';
 END
 GO
 
@@ -158,15 +165,19 @@ IF NOT EXISTS (SELECT 1 FROM Roles WHERE Nombre = 'Cajero')
     INSERT INTO Roles (Nombre) VALUES ('Cajero');
 
 -- Usuarios por defecto
--- admin / admin123 (SHA-256: 240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9)
+-- admin / admin123
 IF NOT EXISTS (SELECT 1 FROM Usuarios WHERE Usuario = 'admin')
-    INSERT INTO Usuarios (NombreCompleto, Usuario, PasswordHash, IdRol)
-    VALUES ('Administrador General', 'admin', '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9', 1);
+    INSERT INTO Usuarios (NombreCompleto, Usuario, Password, IdRol)
+    VALUES ('Administrador General', 'admin', 'admin123', 1);
+ELSE
+    UPDATE Usuarios SET Password = 'admin123' WHERE Usuario = 'admin';
 
--- cajero / cajero123 (SHA-256: 1ed4353e845e2e537e017c0fac3a0d402d231809b7989e90da15191c1148a93f)
+-- cajero / cajero123
 IF NOT EXISTS (SELECT 1 FROM Usuarios WHERE Usuario = 'cajero')
-    INSERT INTO Usuarios (NombreCompleto, Usuario, PasswordHash, IdRol)
-    VALUES ('Cajero Principal', 'cajero', '1ed4353e845e2e537e017c0fac3a0d402d231809b7989e90da15191c1148a93f', 2);
+    INSERT INTO Usuarios (NombreCompleto, Usuario, Password, IdRol)
+    VALUES ('Cajero Principal', 'cajero', 'cajero123', 2);
+ELSE
+    UPDATE Usuarios SET Password = 'cajero123' WHERE Usuario = 'cajero';
 
 -- Categorías
 IF NOT EXISTS (SELECT 1 FROM Categorias WHERE Nombre = 'General')

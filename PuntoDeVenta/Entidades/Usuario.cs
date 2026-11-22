@@ -7,7 +7,8 @@ namespace PuntoDeVenta.Entidades
         public int IdUsuario { get; set; }
         public string NombreCompleto { get; set; } = string.Empty;
         public string NombreUsuario { get; set; } = string.Empty;
-        public string PasswordHash { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+        public string PasswordHash { get => Password; set => Password = value; }
         public int IdRol { get; set; }
         public string? RolNombre { get; set; }
         public bool Activo { get; set; } = true;
