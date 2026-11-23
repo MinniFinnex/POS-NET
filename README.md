@@ -32,16 +32,11 @@ El POS permite al negocio:
 
 ### Clientes y usuarios
 - [x] CRUD de clientes (Documento, Nombre, Teléfono, Email, Dirección).
-- [x] Cliente predeterminado *"Consumidor Final"* (Documento `00000000`).
+- [x] Cliente predeterminado *"Consumidor Final"* (Documento (DUI) `00000000`).
 - [x] Autenticación y control de acceso basado en roles (RBAC):
   - **Administrador (`admin` / `admin123`):** Acceso total a mantenimiento de productos, precios, reportes, turnos y ventas.
   - **Cajero (`cajero` / `cajero123`):** Acceso operativo a ventas, apertura/cierre de turno y consultas en modo lectura.
 
-### Control de turnos de caja
-- [x] Apertura obligatoria de turno con fondo inicial para habilitar el módulo de cobro.
-- [x] Seguimiento continuo de ventas acumuladas por turno en tiempo real.
-- [x] Cierre de turno con arqueo físico (monto esperado vs. monto contado) y cálculo de diferencia (exacto, sobrante o faltante).
-- [x] Historial de turnos con observaciones y estados (`ABIERTA`, `CERRADA`).
 
 ### Registro de ventas y transacciones
 - [x] Carrito reactivo con lector de código de barras, atajos `+1`, `-1`, `Quitar` y `Vaciar`.
